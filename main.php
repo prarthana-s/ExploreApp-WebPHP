@@ -6,15 +6,45 @@
         #heading {
             font-style: italic;
         }
+
+        .mainContainer {
+            text-align: center;
+            border: solid 1px grey;
+            background-color: lightgrey;
+            padding-bottom: 20px;
+        }
+
+        .formContainer {
+            display: inline-block;
+            text-align:left;
+        }
+
+        #locationRadioLoc {
+            margin-left: 326px;
+        }
+
+        .buttonElements {
+            margin-left: 100px;
+        }
+
+        #lineBreak {
+            align: center;
+            font-color
+        }
+
     </style>
     
     
     </head>
 
     <body>
+
+        <div class="mainContainer">
             <div class="headingContainer">
                 <h1 id="heading">Travel and Entertainment Search</h1>
             </div>
+
+            <hr id="lineBreak">
             
             <div class="formContainer">
                 <form method="post">
@@ -27,6 +57,7 @@
                 <div class="categoryElement">
                     <label for="category">Category:</label> 
                     <select name="category">
+                        <option value="default" selected>default</option>
                         <option value="cafe">cafe</option>
                         <option value="bakery">bakery</option>
                         <option value="restaurant">restaurant</option>
@@ -43,7 +74,7 @@
 
                 <div class="distanceLocationElement">
                     <label for="distance">Distance (miles):</label> 
-                    <input type="text" name="distance" value="">            
+                    <input type="text" name="distance" placeholder="10" value="">            
 
                     <span class="locationElement">
                     <label for="locationRadio">from</label>
@@ -52,11 +83,11 @@
                     <label for="locationRadioHere">Here</label>
                     <br>
                     <input type="radio" id="locationRadioLoc" name="locationRadio" value="location">
-                    <input type="text" name="locationInput" value="">                        
+                    <input type="text" name="locationInput" placeholder="location" value="">                        
                 </div>
 
                 <div class="buttonElements">
-                    <button type="submit" value="search">Search</button>
+                    <button type="submit" value="search" disabled>Search</button>
                     <button type="reset" value="clear">Clear</button>
                 </div>
             </form>
