@@ -87,15 +87,38 @@
                 </div>
 
                 <div class="buttonElements">
-                    <button type="submit" value="search">Search</button>
-                    <button onclick="resetForm()" value="clear">Clear</button>
+                    <button type="submit" id="searchButton" name="submit" value="search" disabled>Search</button>
+                    <button onclick="resetForm()" name="clear" value="clear">Clear</button>
                 </div>
             </form>
         </div>
-    
 
-    
+
+        <?php if(isset($_POST["submit"])): ?> 
+            You have submitted the form! <?php echo $_POST["distance"]; ?>
+        <?php endif; ?>
+
         <script>
+
+        window.onload = function() {
+
+            var xhttp = new XMLHttpRequest();
+            var url = "http://ip-api.com/json";
+
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    jsonObj = JSON.parse(xhttp.responseText);
+                    var searchButton = document.getElementById('searchButton');
+                    searchButton.removeAttribute('disabled'); 
+                }
+            };
+
+            xhttp.open("GET",url, true);
+            xhttp.send();
+        }
+
+
+
         function resetForm() {
             document.getElementById("mainForm").reset();
         }
