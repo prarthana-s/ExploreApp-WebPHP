@@ -1,12 +1,6 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-
-    <script>
-        function resetForm() {
-            document.getElementById("mainForm").reset();
-        }
-    </script>
     
     <style>
         #heading {
@@ -57,7 +51,7 @@
 
                 <div class="keywordElement">
                     <label for="keyword">Keyword:</label> 
-                    <input type="text" name="keyword" value="">
+                    <input type="text" name="keyword" value="" required>
                 </div>
 
                 <div class="categoryElement">
@@ -85,20 +79,45 @@
                     <span class="locationElement">
                     <label for="locationRadio">from</label>
 
-                    <input type="radio" id="locationRadioHere" name="locationRadio" value="here">
+                    <input type="radio" id="locationRadioHere" name="locationRadio" value="here" required>
                     <label for="locationRadioHere">Here</label>
                     <br>
-                    <input type="radio" id="locationRadioLoc" name="locationRadio" value="location">
-                    <input type="text" name="locationInput" placeholder="location" value="">                        
+                    <input type="radio" id="locationRadioLoc" name="locationRadio" value="location" required>
+                    <input type="text" id="locationInputText" name="locationInput" placeholder="location" value="">                        
                 </div>
 
                 <div class="buttonElements">
-                    <button type="submit" value="search" disabled>Search</button>
+                    <button type="submit" value="search">Search</button>
                     <button onclick="resetForm()" value="clear">Clear</button>
                 </div>
             </form>
         </div>
     
+
+    
+        <script>
+        function resetForm() {
+            document.getElementById("mainForm").reset();
+        }
+
+        var radioSelection = document.getElementById('locationRadioLoc');
+        var textInput = document.getElementById("locationInputText");
+        console.log(radioSelection);
+        radioSelection.addEventListener('change',toggleRequired,false);
+
+        function toggleRequired() {
+
+            if (textInput.hasAttribute('required') !== true) {
+                textInput.setAttribute('required','required');
+            }
+
+            else {
+                textInput.removeAttribute('required');  
+            }
+        }
+
+    </script>
+
     </body>
 
 </html>
