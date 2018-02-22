@@ -1,6 +1,12 @@
 <!DOCTYPE HTML>
 <html>
     <head>
+
+    <script>
+        function resetForm() {
+            document.getElementById("mainForm").reset();
+        }
+    </script>
     
     <style>
         #heading {
@@ -47,7 +53,7 @@
             <hr id="lineBreak">
             
             <div class="formContainer">
-                <form method="post">
+                <form method="post" id="mainForm">
 
                 <div class="keywordElement">
                     <label for="keyword">Keyword:</label> 
@@ -88,7 +94,7 @@
 
                 <div class="buttonElements">
                     <button type="submit" value="search" disabled>Search</button>
-                    <button type="reset" value="clear">Clear</button>
+                    <button onclick="resetForm()" value="clear">Clear</button>
                 </div>
             </form>
         </div>
