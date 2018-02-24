@@ -117,26 +117,34 @@
             xhttp.send();
         }
 
-
-
-        function resetForm() {
-            document.getElementById("mainForm").reset();
-        }
-
-        var radioSelection = document.getElementById('locationRadioLoc');
+        var radioSelectionLoc = document.getElementById('locationRadioLoc');
+        var radioSelectionHere = document.getElementById('locationRadioHere');        
         var textInput = document.getElementById("locationInputText");
-        console.log(radioSelection);
-        radioSelection.addEventListener('change',toggleRequired,false);
+
+        radioSelectionLoc.addEventListener('change',toggleRequired,false);
+        radioSelectionHere.addEventListener('change',disableTextBox,false);
 
         function toggleRequired() {
 
             if (textInput.hasAttribute('required') !== true) {
+                textInput.removeAttribute('disabled');
                 textInput.setAttribute('required','required');
             }
 
             else {
                 textInput.removeAttribute('required');  
             }
+        }
+
+        // Disable location text input if user selects "user"
+        function disableTextBox() {
+            if (radioSelectionHere.checked) {
+                textInput.setAttribute('disabled','disabled');
+            }
+        }
+
+        function resetForm() {
+            document.getElementById("mainForm").reset();
         }
 
     </script>
