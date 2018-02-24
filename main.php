@@ -74,7 +74,7 @@
 
                 <div class="distanceLocationElement">
                     <label for="distance">Distance (miles):</label> 
-                    <input type="text" name="distance" placeholder="10" value="10">            
+                    <input type="text" name="distance" placeholder="10" value="">            
 
                     <span class="locationElement">
                     <label for="locationRadio">from</label>
@@ -108,7 +108,11 @@
             $lon = $_POST['hereLongitude'];
 
             // Miles to metres conversion
-            $radius = $_POST['distance'] * 1609.34;
+            $distance = $_POST['distance'];
+            if ($distance == 0) {
+                $distance = 10;
+            }
+            $radius = $distance * 1609.34;
 
             $keyword = $_POST['keyword'];
             $type = $_POST['category'];
