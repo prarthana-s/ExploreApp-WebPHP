@@ -79,7 +79,7 @@
                     <span class="locationElement">
                     <label for="locationRadio">from</label>
 
-                    <input type="radio" id="locationRadioHere" name="locationRadio" value="here" required>
+                    <input type="radio" id="locationRadioHere" name="locationRadio" value="here" checked='checked' required>
                     <label for="locationRadioHere">Here</label>
                     <br>
                     <input type="radio" id="locationRadioLoc" name="locationRadio" value="location" required>
@@ -94,9 +94,17 @@
         </div>
 
 
-        <?php if(isset($_POST["submit"])): ?> 
-            You have submitted the form! <?php echo $_POST["distance"]; ?>
-        <?php endif; ?>
+        <?php 
+        
+        foreach ($_POST as $key => $value) {
+            echo $key . ":" . $value . "<br/>";
+        }
+
+        if(isset($_POST["submit"])): 
+            echo "You have submitted the form!" . $_POST["distance"];
+        endif; 
+        
+        ?>
 
         <script>
 
