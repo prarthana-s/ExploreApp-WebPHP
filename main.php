@@ -61,26 +61,29 @@
                         <option value="cafe">cafe</option>
                         <option value="bakery">bakery</option>
                         <option value="restaurant">restaurant</option>
-                        <option value="beautySalon">beauty salon</option>
+                        <option value="beauty_salon">beauty salon</option>
                         <option value="casino">casino</option>
-                        <option value="movieTheater">movie theatre</option>
+                        <option value="movie_theater">movie theatre</option>
                         <option value="lodging">lodging</option>
                         <option value="airport">airport</option>
-                        <option value="trainStation">train station</option>
-                        <option value="subwayStation">subway station</option>
-                        <option value="busStation">bus station</option>
+                        <option value="train_station">train station</option>
+                        <option value="subway_station">subway station</option>
+                        <option value="bus_station">bus station</option>
                     </select>
                 </div>
 
                 <div class="distanceLocationElement">
                     <label for="distance">Distance (miles):</label> 
-                    <input type="text" name="distance" placeholder="10" value="">            
+                    <input type="text" name="distance" placeholder="10" value="10">            
 
                     <span class="locationElement">
                     <label for="locationRadio">from</label>
 
                     <input type="radio" id="locationRadioHere" name="locationRadio" value="here" checked='checked' required>
                     <label for="locationRadioHere">Here</label>
+
+                    <input type="hidden" id="hereLatitude" name="hereLatitude" value="">
+                    <input type="hidden" id="hereLongitude" name="hereLongitude" value="">
                     <br>
                     <input type="radio" id="locationRadioLoc" name="locationRadio" value="location" required>
                     <input type="text" id="locationInputText" name="locationInput" placeholder="location" value="">                        
@@ -101,7 +104,26 @@
         }
 
         if(isset($_POST["submit"])): 
-            echo "You have submitted the form!" . $_POST["distance"];
+            $lat = $_POST['hereLatitude'];
+            $lon = $_POST['hereLongitude'];
+
+            // Miles to metres conversion
+            $radius = $_POST['distance'] * 1609.34;
+
+            $keyword = $_POST['keyword'];
+            $type = $_POST['category'];
+
+            //If type is default, pass empty string as type parameter
+            if ($type == 'default') {
+                $type = "";
+            }
+
+            $key = YOUR_API_KEY;
+
+            $url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=$radius&type=$type&keyword=$keyword&key=$key";
+            echo $url;
+            $homepage = file_get_contents($url);
+            echo $homepage;
         endif; 
         
         ?>
@@ -118,6 +140,8 @@
                     jsonObj = JSON.parse(xhttp.responseText);
                     var searchButton = document.getElementById('searchButton');
                     searchButton.removeAttribute('disabled'); 
+                    document.getElementById('hereLatitude').value = jsonObj.lat; 
+                    document.getElementById('hereLongitude').value = jsonObj.lon;                    
                 }
             };
 
