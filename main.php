@@ -98,6 +98,8 @@
 
 
         <?php 
+
+        $nearbyPlacesJSON = '';
         
         foreach ($_POST as $key => $value) {
             echo $key . ":" . $value . "<br/>";
@@ -125,15 +127,14 @@
             $key = YOUR_API_KEY;
 
             $url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=$radius&type=$type&keyword=$keyword&key=$key";
-            echo $url;
-            $homepage = file_get_contents($url);
-            echo $homepage;
+            $nearbyPlacesJSON = file_get_contents($url);
         endif; 
         
         ?>
 
         <script>
 
+        // Enable Search button only after user's geolocation is fetched
         window.onload = function() {
 
             var xhttp = new XMLHttpRequest();
@@ -160,6 +161,7 @@
         radioSelectionLoc.addEventListener('change',toggleRequired,false);
         radioSelectionHere.addEventListener('change',disableTextBox,false);
 
+        // If "Location" is selected, enable the text field and make it required
         function toggleRequired() {
 
             if (textInput.hasAttribute('required') !== true) {
@@ -172,7 +174,7 @@
             }
         }
 
-        // Disable location text input if user selects "user"
+        // Disable location text input if user selects "Here"
         function disableTextBox() {
             if (radioSelectionHere.checked) {
                 textInput.setAttribute('disabled','disabled');
@@ -182,6 +184,22 @@
         function resetForm() {
             document.getElementById("mainForm").reset();
         }
+
+
+        // AJAX call to PHP script to fetch nearby places JSON data
+        var xhttp2 = new XMLHttpRequest();
+        var url = "main.php";
+
+        // Process the nearby places JSON data and display in tabular form
+        xhttp2.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                jsonObj = <?php echo json_encode($nearbyPlacesJSON); ?>;
+                console.log(jsonObj);
+            }
+        };
+
+        xhttp2.open("GET",url, true);
+        xhttp2.send();
 
     </script>
 
