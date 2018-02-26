@@ -12,6 +12,14 @@
             border: solid 1px grey;
             background-color: lightgrey;
             padding-bottom: 20px;
+            margin-left: 250px;
+            margin-right: 250px;
+        }
+
+        #noRecordsFound {
+            border: solid 1px grep;
+            background-color: lightgrey;
+            text-align: center;
         }
 
         .formContainer {
@@ -56,7 +64,7 @@
             <hr id="lineBreak">
             
             <div class="formContainer">
-                <form method="post" id="mainForm">
+                <form id="mainForm" method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) ?>">
 
                 <div class="keywordElement">
                     <label for="keyword">Keyword:</label> 
@@ -110,13 +118,30 @@
 
         $nearbyPlacesJSON = '';
         
-        foreach ($_POST as $key => $value) {
-            echo $key . ":" . $value . "<br/>";
-        }
+        // foreach ($_POST as $key => $value) {
+        //     echo $key . ":" . $value . "<br/>";
+        // }
 
         if(isset($_POST["submit"])): 
-            $lat = $_POST['hereLatitude'];
-            $lon = $_POST['hereLongitude'];
+
+            $key = YOUR_API_KEY;
+
+            // User has entered location
+            // Fetch latitude and longitude
+            if ($_POST['locationRadio'] == 'location') {
+                $locationName = urlencode($_POST['locationInput']);
+                $url = "https://maps.googleapis.com/maps/api/geocode/json?address=$locationName&key=$key";
+                $locationDetails = file_get_contents($url);
+                $locationDetailsJSON = json_decode($locationDetails,true);
+                $lat = $locationDetailsJSON["results"][0]["geometry"]["location"]["lat"];
+                $lon = $locationDetailsJSON["results"][0]["geometry"]["location"]["lng"];
+            }
+
+            // Use current location coordinates
+            else {
+                $lat = $_POST['hereLatitude'];
+                $lon = $_POST['hereLongitude'];
+            }
 
             // Miles to metres conversion
             $distance = $_POST['distance'];
@@ -132,8 +157,6 @@
             if ($type == 'default') {
                 $type = "";
             }
-
-            $key = YOUR_API_KEY;
 
             $url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=$radius&type=$type&keyword=$keyword&key=$key";
             $nearbyPlacesJSON = file_get_contents($url);
@@ -211,10 +234,13 @@
                     var results = jsonObj.results;
                     console.log(results);
 
-                    tableHTML = "<table><tr><th>Icon</th><th>Name</th><th>Address</th></tr>";
+                    if (!results.length) {
+                        tableHTML = '<div id="noRecordsFound"><p>No records have been found.</p></div';
+                    }
 
-                    if (results.length) {
-                        console.log("results returned");
+                    else {
+                        tableHTML = "<table><tr><th>Icon</th><th>Name</th><th>Address</th></tr>";
+
                         for (let i=0; i<results.length; i++) {
                             var icon = results[i].icon;
                             var name = results[i].name;
@@ -223,13 +249,14 @@
                             tableHTML += '<tr><td><img src="' + icon + '" class="iconImg" alt="user image"/></td><td>' + name + '</td><td>' + address + '</td></tr>';
                         }
                         tableHTML += "</table>";
-
-                        var bodyElement = document.getElementsByTagName('body')[0];
-
-                        var userNameSpan = document.createElement('span');
-                        userNameSpan.innerHTML = tableHTML;
-                        bodyElement.appendChild(userNameSpan);
                     }
+
+                    var bodyElement = document.getElementsByTagName('body')[0];
+
+                    var userNameSpan = document.createElement('span');
+                    userNameSpan.innerHTML = tableHTML;
+                    bodyElement.appendChild(userNameSpan);
+                    
                 }
             }
         };
