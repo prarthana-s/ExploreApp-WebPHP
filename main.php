@@ -32,6 +32,15 @@
             font-color
         }
 
+        table, td, th {
+            border: 1px solid black;
+            border-spacing: 0px;
+        }
+
+        .iconImg {
+            width: 40px;
+        }
+
     </style>
     
     
@@ -195,6 +204,33 @@
             if (this.readyState == 4 && this.status == 200) {
                 jsonObj = <?php echo json_encode($nearbyPlacesJSON); ?>;
                 console.log(jsonObj);
+                if (jsonObj) {
+                    jsonObj = JSON.parse(jsonObj);
+                    console.log(jsonObj);
+                    
+                    var results = jsonObj.results;
+                    console.log(results);
+
+                    tableHTML = "<table><tr><th>Icon</th><th>Name</th><th>Address</th></tr>";
+
+                    if (results.length) {
+                        console.log("results returned");
+                        for (let i=0; i<results.length; i++) {
+                            var icon = results[i].icon;
+                            var name = results[i].name;
+                            var address = results[i].vicinity;
+
+                            tableHTML += '<tr><td><img src="' + icon + '" class="iconImg" alt="user image"/></td><td>' + name + '</td><td>' + address + '</td></tr>';
+                        }
+                        tableHTML += "</table>";
+
+                        var bodyElement = document.getElementsByTagName('body')[0];
+
+                        var userNameSpan = document.createElement('span');
+                        userNameSpan.innerHTML = tableHTML;
+                        bodyElement.appendChild(userNameSpan);
+                    }
+                }
             }
         };
 
