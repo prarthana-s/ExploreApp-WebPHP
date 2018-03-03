@@ -1,3 +1,60 @@
+<?php 
+
+$nearbyPlacesJSON = '';
+
+if (isset($_POST)) {
+
+    $request_body = file_get_contents('php://input');
+    $data = json_decode($request_body,true);
+    if ($data['funcName'] == 'displayPlaceDetails') {
+        echo $data['placeID'];
+        die();
+    }
+}
+
+if(isset($_POST["submit"])) {
+
+    $key = YOUR_API_KEY;
+
+    // User has entered location
+    // Fetch latitude and longitude
+    if ($_POST['locationRadio'] == 'location') {
+        $locationName = urlencode($_POST['locationInput']);
+        $url = "https://maps.googleapis.com/maps/api/geocode/json?address=$locationName&key=$key";
+        $locationDetails = file_get_contents($url);
+        $locationDetailsJSON = json_decode($locationDetails,true);
+        $lat = $locationDetailsJSON["results"][0]["geometry"]["location"]["lat"];
+        $lon = $locationDetailsJSON["results"][0]["geometry"]["location"]["lng"];
+    }
+
+    // Use current location coordinates
+    else {
+        $lat = $_POST['hereLatitude'];
+        $lon = $_POST['hereLongitude'];
+    }
+
+    // Miles to metres conversion
+    $distance = $_POST['distance'];
+    if ($distance == 0) {
+        $distance = 10;
+    }
+    $radius = $distance * 1609.34;
+
+    $keyword = $_POST['keyword'];
+    $type = $_POST['category'];
+
+    //If type is default, pass empty string as type parameter
+    if ($type == 'default') {
+        $type = "";
+    }
+
+    $url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=$radius&type=$type&keyword=$keyword&key=$key";
+    $nearbyPlacesJSON = file_get_contents($url);
+}
+
+?>
+
+
 <!DOCTYPE HTML>
 <html>
     <head>
@@ -113,57 +170,6 @@
             </form>
         </div>
 
-
-        <?php 
-
-        $nearbyPlacesJSON = '';
-        
-        // foreach ($_POST as $key => $value) {
-        //     echo $key . ":" . $value . "<br/>";
-        // }
-
-        if(isset($_POST["submit"])): 
-
-            $key = YOUR_API_KEY;
-
-            // User has entered location
-            // Fetch latitude and longitude
-            if ($_POST['locationRadio'] == 'location') {
-                $locationName = urlencode($_POST['locationInput']);
-                $url = "https://maps.googleapis.com/maps/api/geocode/json?address=$locationName&key=$key";
-                $locationDetails = file_get_contents($url);
-                $locationDetailsJSON = json_decode($locationDetails,true);
-                $lat = $locationDetailsJSON["results"][0]["geometry"]["location"]["lat"];
-                $lon = $locationDetailsJSON["results"][0]["geometry"]["location"]["lng"];
-            }
-
-            // Use current location coordinates
-            else {
-                $lat = $_POST['hereLatitude'];
-                $lon = $_POST['hereLongitude'];
-            }
-
-            // Miles to metres conversion
-            $distance = $_POST['distance'];
-            if ($distance == 0) {
-                $distance = 10;
-            }
-            $radius = $distance * 1609.34;
-
-            $keyword = $_POST['keyword'];
-            $type = $_POST['category'];
-
-            //If type is default, pass empty string as type parameter
-            if ($type == 'default') {
-                $type = "";
-            }
-
-            $url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=$radius&type=$type&keyword=$keyword&key=$key";
-            $nearbyPlacesJSON = file_get_contents($url);
-        endif; 
-        
-        ?>
-
         <script>
 
         // Enable Search button only after user's geolocation is fetched
@@ -192,6 +198,45 @@
 
         radioSelectionLoc.addEventListener('change',toggleRequired,false);
         radioSelectionHere.addEventListener('change',disableTextBox,false);
+
+        function displayPlaceDetails(ev) {
+            let target = event.target;
+            if (target.className == 'placeName') {
+                console.log("place name clicked!");
+                console.log(target);
+                console.log(target.dataset.placeid);
+                
+                // var xhttp3 = new XMLHttpRequest();
+                // var url = "main.php?funcName=displayDetails&placeid=" + target.dataset.placeid;
+                // console.log(url);
+                // xhttp3.open('GET', url, true);
+                // xhttp3.onreadystatechange = function() {
+                //     if (xhttp3.status === 200) {
+                //         console.log("Returned!");
+                //         // alert('User\'s name is ' + xhr.responseText);
+                //     }
+                //     else {
+                //         alert('Request failed.  Returned status of ' + xhr.status);
+                //     }
+                // };
+                // xhttp3.send();
+
+                var xhr = new XMLHttpRequest();
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        // var userInfo = JSON.parse(xhr.responseText);
+                        console.log("I have returned.");
+                        console.log(xhr.responseText);
+                    }
+                };
+                xhr.open('POST', 'main.php');
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.send(JSON.stringify({
+                    funcName: 'displayPlaceDetails', 
+                    placeID : target.dataset.placeid
+                }));
+            }
+        }
 
         // If "Location" is selected, enable the text field and make it required
         function toggleRequired() {
@@ -226,27 +271,26 @@
         xhttp2.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 jsonObj = <?php echo json_encode($nearbyPlacesJSON); ?>;
-                console.log(jsonObj);
+
                 if (jsonObj) {
                     jsonObj = JSON.parse(jsonObj);
-                    console.log(jsonObj);
                     
                     var results = jsonObj.results;
-                    console.log(results);
 
                     if (!results.length) {
                         tableHTML = '<div id="noRecordsFound"><p>No records have been found.</p></div';
                     }
 
                     else {
-                        tableHTML = "<table><tr><th>Icon</th><th>Name</th><th>Address</th></tr>";
+                        tableHTML = '<table id="placesTable"><tr><th>Icon</th><th>Name</th><th>Address</th></tr>';
 
                         for (let i=0; i<results.length; i++) {
                             var icon = results[i].icon;
                             var name = results[i].name;
                             var address = results[i].vicinity;
+                            var placeID = results[i].place_id;
 
-                            tableHTML += '<tr><td><img src="' + icon + '" class="iconImg" alt="user image"/></td><td>' + name + '</td><td>' + address + '</td></tr>';
+                            tableHTML += '<tr><td><img class="placeIcon" src="' + icon + '" alt="user image"/></td><td class="placeName" data-placeid="' + placeID + '">' + name + '</td><td class="placeAddress">' + address + '</td></tr>';
                         }
                         tableHTML += "</table>";
                     }
@@ -257,6 +301,8 @@
                     userNameSpan.innerHTML = tableHTML;
                     bodyElement.appendChild(userNameSpan);
                     
+                    var placesTable = document.getElementById('placesTable');
+                    placesTable.addEventListener('click',displayPlaceDetails,false);
                 }
             }
         };
