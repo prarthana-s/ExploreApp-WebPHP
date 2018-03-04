@@ -8,7 +8,11 @@ if (isset($_POST)) {
 
     $requestBody = file_get_contents('php://input');
     $data = json_decode($requestBody,true);
+
+    // Check if the request is for showing reviews and photos
     if ($data['funcName'] == 'displayPlaceDetails') {
+
+        // Call Google Places API to fetch place details
         $placeID = $data['placeID'];
         $url = "https://maps.googleapis.com/maps/api/place/details/json?placeid=$placeID&key=$key";
         $placeDetails = file_get_contents($url);
@@ -22,6 +26,8 @@ if (isset($_POST)) {
                 $countPhotos = 5;
             }
             
+            // Fetch the photos and store them in a folder named "images" on the server
+            // Name the photos sequentially as photo0, photo1 and so on with png extension
             $maxWidth = 750;
             for ($i = 0 ; $i < $countPhotos ; $i++) {
                 $photoReference = $photos[$i]["photo_reference"];
@@ -68,6 +74,8 @@ if(isset($_POST["submit"])) {
     }
     $radius = $distance * 1609.34;
 
+
+    // Handle case where keyword consists of multiple words/special characters
     $keyword = urlencode($_POST['keyword']);
     $type = $_POST['category'];
 
@@ -211,11 +219,14 @@ if(isset($_POST["submit"])) {
 
         <script>
 
+        // This is defined globally to fetch the current script
+        // Used later to fetch images from server for "Photos" feature
         var script = document.currentScript;
         var fullUrl = script.src;
 
         var bodyElement = document.getElementsByTagName('body')[0];
 
+        // Used for Reviews and Photos panel
         var arrowUpIcon = "http://cs-server.usc.edu:45678/hw/hw6/images/arrow_up.png";
         var arrowDownIcon = "http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png";
 
@@ -239,6 +250,7 @@ if(isset($_POST["submit"])) {
             xhttp.send();
         }
 
+        // Handling of radio buttons
         var radioSelectionLoc = document.getElementById('locationRadioLoc');
         var radioSelectionHere = document.getElementById('locationRadioHere');        
         var textInput = document.getElementById("locationInputText");
@@ -248,11 +260,11 @@ if(isset($_POST["submit"])) {
 
         function displayPlaceDetails(ev) {
             let target = event.target;
-            if (target.className == 'placeName') {
-                console.log("place name clicked!");
-                console.log(target);
-                console.log(target.dataset.placeid);
 
+            // Check if target was indeed a place name
+            // Required because event listener is on the entire table element
+            // User could have also clicked on an address or icon
+            if (target.className == 'placeName') {
                 var xhr = new XMLHttpRequest();
                 xhr.onload = function() {
                     if (xhr.status === 200) {
@@ -262,11 +274,11 @@ if(isset($_POST["submit"])) {
                         var arrowWidth = 30;
 
                         var reviewsPanel = document.createElement('div');
-                        var reviewsPanelHTML = '<div id="reviewsPanel">Click here to view reviews</div><div class="arrow"><img class="toggleReviews" width="' + arrowWidth + '" src="' + arrowDownIcon + '"/></div>';
+                        var reviewsPanelHTML = '<div id="reviewsPanel">Click here to view reviews</div><div class="arrow"><img class="toggleReviewsArrow" width="' + arrowWidth + '" src="' + arrowDownIcon + '"/></div>';
                         reviewsPanel.innerHTML = reviewsPanelHTML;
                         
                         var photosPanel = document.createElement('div');
-                        var photosPanelHTML = '<div id="photosPanel">Click here to view photos</div><div class="arrow"><img class="togglePhotos" width="' + arrowWidth + '" src="' + arrowDownIcon + '"/></div>';
+                        var photosPanelHTML = '<div id="photosPanel">Click here to view photos</div><div class="arrow"><img class="togglePhotosArrow" width="' + arrowWidth + '" src="' + arrowDownIcon + '"/></div>';
                         photosPanel.innerHTML = photosPanelHTML;
                 
                         var photosBody = document.createElement('div');
@@ -314,8 +326,8 @@ if(isset($_POST["submit"])) {
                         bodyElement.appendChild(reviewsPanel);
                         bodyElement.appendChild(photosPanel);
 
-                        var toggleReviewsArrow = document.getElementsByClassName('toggleReviews')[0];
-                        var togglePhotosArrow = document.getElementsByClassName('togglePhotos')[0];
+                        var toggleReviewsArrow = document.getElementsByClassName('toggleReviewsArrow')[0];
+                        var togglePhotosArrow = document.getElementsByClassName('togglePhotosArrow')[0];
 
                         toggleReviewsArrow.addEventListener('click', toggleReviewsFunc);
                         togglePhotosArrow.addEventListener('click', togglePhotosFunc);
@@ -332,7 +344,6 @@ if(isset($_POST["submit"])) {
 
         // If "Location" is selected, enable the text field and make it required
         function toggleRequired() {
-
             if (textInput.hasAttribute('required') !== true) {
                 textInput.removeAttribute('disabled');
                 textInput.setAttribute('required','required');
@@ -354,42 +365,59 @@ if(isset($_POST["submit"])) {
             document.getElementById("mainForm").reset();
         }
 
+        // Handles display of reviews panel
+        // If reviews panel is shown, hide the photos panel
         function toggleReviewsFunc() {
-            var reviewsBody = document.getElementsByClassName('reviewsBody')[0];
-            var photosBody = document.getElementsByClassName('photosBody')[0];
-
             var reviewsPanel = document.getElementById('reviewsPanel');
             var photosPanel = document.getElementById('photosPanel');
 
-            console.log(reviewsBody.style);
+            var reviewsBody = document.getElementsByClassName('reviewsBody')[0];
+            var photosBody = document.getElementsByClassName('photosBody')[0];
+
+            var reviewsArrow = document.getElementsByClassName('toggleReviewsArrow')[0];
+            var photosArrow = document.getElementsByClassName('togglePhotosArrow')[0];
+
             if (reviewsBody.style.display == 'block') {
                 reviewsBody.style.display = 'none';
                 reviewsPanel.innerHTML = 'Click here to show reviews.'
+                reviewsArrow.src = arrowDownIcon;
             }
             else {
                 reviewsBody.style.display = 'block';   
                 reviewsPanel.innerHTML = 'Click here to hide reviews.'
+                reviewsArrow.src = arrowUpIcon;      
+
                 photosBody.style.display = 'none';
-                photosPanel.innerHTML = 'Click here to show photos.'                
+                photosPanel.innerHTML = 'Click here to show photos.'   
+                photosArrow.src = arrowDownIcon;                             
             }
         }
 
+        // Handles display of photos panel
+        // If photos panel is shown, hide the reviews panel
         function togglePhotosFunc() {
-            var reviewsBody = document.getElementsByClassName('reviewsBody')[0];
-            var photosBody = document.getElementsByClassName('photosBody')[0];
-
             var reviewsPanel = document.getElementById('reviewsPanel');
             var photosPanel = document.getElementById('photosPanel');
             
+            var reviewsBody = document.getElementsByClassName('reviewsBody')[0];
+            var photosBody = document.getElementsByClassName('photosBody')[0];
+            
+            var reviewsArrow = document.getElementsByClassName('toggleReviewsArrow')[0];
+            var photosArrow = document.getElementsByClassName('togglePhotosArrow')[0];
+            
             if (photosBody.style.display == 'block') {
                 photosBody.style.display = 'none';
-                photosPanel.innerHTML = 'Click here to show photos.'   
+                photosPanel.innerHTML = 'Click here to show photos.'; 
+                photosArrow.src = arrowDownIcon;                  
             }
             else {
                 photosBody.style.display = 'block'; 
-                photosPanel.innerHTML = 'Click here to hide photos.'                                
+                photosPanel.innerHTML = 'Click here to hide photos.';  
+                photosArrow.src = arrowUpIcon; 
+
                 reviewsBody.style.display = 'none';               
-                reviewsPanel.innerHTML = 'Click here to show reviews.'                                                
+                reviewsPanel.innerHTML = 'Click here to show reviews.';
+                reviewsArrow.src = arrowDownIcon;                                                                                
             }
         }
 
