@@ -134,6 +134,14 @@ if(isset($_POST["submit"])) {
             width: 40px;
         }
 
+        .photosBody {
+            display: none;
+        }
+
+        .reviewsBody {
+            display:none;
+        }
+
     </style>
     
     
@@ -208,6 +216,9 @@ if(isset($_POST["submit"])) {
 
         var bodyElement = document.getElementsByTagName('body')[0];
 
+        var arrowUpIcon = "http://cs-server.usc.edu:45678/hw/hw6/images/arrow_up.png";
+        var arrowDownIcon = "http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png";
+
         // Enable Search button only after user's geolocation is fetched
         window.onload = function() {
 
@@ -241,24 +252,6 @@ if(isset($_POST["submit"])) {
                 console.log("place name clicked!");
                 console.log(target);
                 console.log(target.dataset.placeid);
-                
-                // var xhttp3 = new XMLHttpRequest();
-                // var url = "main.php?funcName=displayDetails&placeid=" + target.dataset.placeid;
-                // console.log(url);
-                // xhttp3.open('GET', url, true);
-                // xhttp3.onreadystatechange = function() {
-                //     if (xhttp3.status === 200) {
-                //         console.log("Returned!");
-                //         // alert('User\'s name is ' + xhr.responseText);
-                //     }
-                //     else {
-                //         alert('Request failed.  Returned status of ' + xhr.status);
-                //     }
-                // };
-                // xhttp3.send();
-
-                // http://cs-server.usc.edu:45678/hw/hw6/images/arrow_up.png
-                // http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png
 
                 var xhr = new XMLHttpRequest();
                 xhr.onload = function() {
@@ -266,14 +259,22 @@ if(isset($_POST["submit"])) {
                         var placeDetailsJSON = JSON.parse(xhr.responseText);
                         var placeDetailsResult = placeDetailsJSON["result"];
 
+                        var arrowWidth = 30;
+
                         var reviewsPanel = document.createElement('div');
-                        reviewsHTML = '<div id="reviewsPanel">Click here to view reviews</div><div class="arrow"><img src="http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png"/></div>';
-                        reviewsPanel.innerHTML = reviewsHTML;
+                        var reviewsPanelHTML = '<div id="reviewsPanel">Click here to view reviews</div><div class="arrow"><img class="toggleReviews" width="' + arrowWidth + '" src="' + arrowDownIcon + '"/></div>';
+                        reviewsPanel.innerHTML = reviewsPanelHTML;
                         
                         var photosPanel = document.createElement('div');
-                        photosHTML = '<div id="photosPanel">Click here to view photos</div><div class="arrow"><img src="http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png"/></div>';
-                        photosPanel.innerHTML = photosHTML;
+                        var photosPanelHTML = '<div id="photosPanel">Click here to view photos</div><div class="arrow"><img class="togglePhotos" width="' + arrowWidth + '" src="' + arrowDownIcon + '"/></div>';
+                        photosPanel.innerHTML = photosPanelHTML;
                 
+                        var photosBody = document.createElement('div');
+                        photosBody.className = "photosBody";
+ 
+                        var reviewsBody = document.createElement('div');
+                        reviewsBody.className = "reviewsBody";
+
                         // Display reviews
                         if ('reviews' in placeDetailsResult) {
                             var reviews = placeDetailsJSON["result"]["reviews"];
@@ -286,11 +287,9 @@ if(isset($_POST["submit"])) {
                                 reviewsHTML += '<tr><td><img class="userPhoto" src="' + userPhotoURL + '" alt="user image"/>' + authorName + '</tr><tr><td>' + reviewText + '</td></tr>';
                             }
                             reviewsHTML += "</table>";
-                            var reviewsBody = document.createElement('div');
                             reviewsBody.innerHTML = reviewsHTML;
                         }
                         else {
-                            var reviewsBody = document.createElement('div');
                             reviewsBody.innerHTML = 'No Reviews Found';
                         }
                         reviewsPanel.appendChild(reviewsBody);
@@ -298,19 +297,16 @@ if(isset($_POST["submit"])) {
                         // Display photos
                         if ('photos' in placeDetailsResult) {
                             let photosLen = placeDetailsResult["photos"].length;
+                            photosHTML = '<table id="photosTable">';
                             photosLen > 5 ? photosLen = 5 : photosLen = photosLen ;
-                            
-                            photosHTML = '';
                             
                             for (let i = 0 ; i < photosLen ; i++) {
                                 photosHTML += '<a target="_blank" href="' + fullUrl + '/images/photo' + i + '.png"><img src="' + fullUrl + '/images/photo' + i + '.png"/></a>';
                             }
-
-                            var photosBody = document.createElement('div');
+                            photosHTML += "</table>";
                             photosBody.innerHTML = photosHTML;
                         }
-                        else {
-                            var photosBody = document.createElement('div');
+                        else {                            
                             photosBody.innerHTML = 'No Photos Found';
                         }
                         photosPanel.appendChild(photosBody);
@@ -318,6 +314,11 @@ if(isset($_POST["submit"])) {
                         bodyElement.appendChild(reviewsPanel);
                         bodyElement.appendChild(photosPanel);
 
+                        var toggleReviewsArrow = document.getElementsByClassName('toggleReviews')[0];
+                        var togglePhotosArrow = document.getElementsByClassName('togglePhotos')[0];
+
+                        toggleReviewsArrow.addEventListener('click', toggleReviewsFunc);
+                        togglePhotosArrow.addEventListener('click', togglePhotosFunc);
                     }
                 };
                 xhr.open('POST', 'main.php');
@@ -353,6 +354,31 @@ if(isset($_POST["submit"])) {
             document.getElementById("mainForm").reset();
         }
 
+        function toggleReviewsFunc() {
+            var reviewsBody = document.getElementsByClassName('reviewsBody')[0];
+            var photosBody = document.getElementsByClassName('photosBody')[0];
+            console.log(reviewsBody.style);
+            if (reviewsBody.style.display == 'block') {
+                reviewsBody.style.display = 'none';
+            }
+            else {
+                reviewsBody.style.display = 'block';   
+                photosBody.style.display = 'none';
+
+            }
+        }
+
+        function togglePhotosFunc() {
+            var reviewsBody = document.getElementsByClassName('reviewsBody')[0];
+            var photosBody = document.getElementsByClassName('photosBody')[0];
+            if (photosBody.style.display == 'block') {
+                photosBody.style.display = 'none';
+            }
+            else {
+                photosBody.style.display = 'block'; 
+                reviewsBody.style.display = 'none';                               
+            }
+        }
 
         // AJAX call to PHP script to fetch nearby places JSON data
         var xhttp2 = new XMLHttpRequest();
