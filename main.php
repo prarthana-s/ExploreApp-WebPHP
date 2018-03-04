@@ -257,13 +257,23 @@ if(isset($_POST["submit"])) {
                 // };
                 // xhttp3.send();
 
+                // http://cs-server.usc.edu:45678/hw/hw6/images/arrow_up.png
+                // http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png
+
                 var xhr = new XMLHttpRequest();
                 xhr.onload = function() {
                     if (xhr.status === 200) {
                         var placeDetailsJSON = JSON.parse(xhr.responseText);
-                        console.log(placeDetailsJSON);
                         var placeDetailsResult = placeDetailsJSON["result"];
 
+                        var reviewsPanel = document.createElement('div');
+                        reviewsHTML = '<div id="reviewsPanel">Click here to view reviews</div><div class="arrow"><img src="http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png"/></div>';
+                        reviewsPanel.innerHTML = reviewsHTML;
+                        
+                        var photosPanel = document.createElement('div');
+                        photosHTML = '<div id="photosPanel">Click here to view photos</div><div class="arrow"><img src="http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png"/></div>';
+                        photosPanel.innerHTML = photosHTML;
+                
                         // Display reviews
                         if ('reviews' in placeDetailsResult) {
                             var reviews = placeDetailsJSON["result"]["reviews"];
@@ -276,42 +286,37 @@ if(isset($_POST["submit"])) {
                                 reviewsHTML += '<tr><td><img class="userPhoto" src="' + userPhotoURL + '" alt="user image"/>' + authorName + '</tr><tr><td>' + reviewText + '</td></tr>';
                             }
                             reviewsHTML += "</table>";
-                            var reviewsDiv = document.createElement('div');
-                            reviewsDiv.innerHTML = reviewsHTML;
-                            bodyElement.appendChild(reviewsDiv);
-                            
+                            var reviewsBody = document.createElement('div');
+                            reviewsBody.innerHTML = reviewsHTML;
                         }
                         else {
-                            console.log("no reviews");
-                            var noReviewsDiv = document.createElement('div');
-                            noReviewsDiv.innerHTML = 'No Reviews Found';
-                            bodyElement.appendChild(noReviewsDiv);
+                            var reviewsBody = document.createElement('div');
+                            reviewsBody.innerHTML = 'No Reviews Found';
                         }
+                        reviewsPanel.appendChild(reviewsBody);
 
                         // Display photos
                         if ('photos' in placeDetailsResult) {
-                            console.log("Photos exist");
-
                             let photosLen = placeDetailsResult["photos"].length;
-
                             photosLen > 5 ? photosLen = 5 : photosLen = photosLen ;
                             
                             photosHTML = '';
-
+                            
                             for (let i = 0 ; i < photosLen ; i++) {
                                 photosHTML += '<a target="_blank" href="' + fullUrl + '/images/photo' + i + '.png"><img src="' + fullUrl + '/images/photo' + i + '.png"/></a>';
                             }
 
-                            var photosDiv = document.createElement('div');
-                            photosDiv.innerHTML = photosHTML;
-                            bodyElement.appendChild(photosDiv);
+                            var photosBody = document.createElement('div');
+                            photosBody.innerHTML = photosHTML;
                         }
                         else {
-                            console.log("no photos");
-                            var noPhotosDiv = document.createElement('div');
-                            noPhotosDiv.innerHTML = 'No Photos Found';
-                            bodyElement.appendChild(noPhotosDiv);
+                            var photosBody = document.createElement('div');
+                            photosBody.innerHTML = 'No Photos Found';
                         }
+                        photosPanel.appendChild(photosBody);
+
+                        bodyElement.appendChild(reviewsPanel);
+                        bodyElement.appendChild(photosPanel);
 
                     }
                 };
