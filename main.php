@@ -262,15 +262,27 @@ if(isset($_POST["submit"])) {
                     if (xhr.status === 200) {
                         var placeDetailsJSON = JSON.parse(xhr.responseText);
                         console.log(placeDetailsJSON);
-                        var reviews = placeDetailsJSON["result"]["reviews"];
-                        console.log(reviews);
+                        var placeDetailsResult = placeDetailsJSON["result"];
 
-                        if ('photos' in placeDetailsJSON["result"]) {
+                        // Display reviews
+                        if ('reviews' in placeDetailsResult) {
+                            var reviews = placeDetailsJSON["result"]["reviews"];
+                            console.log(reviews);
+                        }
+                        else {
+                            console.log("no reviews");
+                            var noReviewsDiv = document.createElement('div');
+                            noReviewsDiv.innerHTML = 'No Reviews Found';
+                            bodyElement.appendChild(noReviewsDiv);
+                        }
+
+                        // Display photos
+                        if ('photos' in placeDetailsResult) {
                             console.log("Photos exist");
                             
                             photosHTML = '';
                             for (let i = 0 ; i < 5 ; i++) {
-                                photosHTML += '<img src="' + fullUrl + '/images/photo' + i + '.png"/>';
+                                photosHTML += '<a target="_blank" href="' + fullUrl + '/images/photo' + i + '.png"><img src="' + fullUrl + '/images/photo' + i + '.png"/></a>';
                             }
 
                             var photosDiv = document.createElement('div');
@@ -280,7 +292,7 @@ if(isset($_POST["submit"])) {
                         else {
                             console.log("no photos");
                             var noPhotosDiv = document.createElement('div');
-                            noPhotosDiv.innerHTML = 'No Reviews Found';
+                            noPhotosDiv.innerHTML = 'No Photos Found';
                             bodyElement.appendChild(noPhotosDiv);
                         }
 
