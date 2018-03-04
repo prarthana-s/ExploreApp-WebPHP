@@ -32,9 +32,9 @@ if (isset($_POST)) {
         }
 
         // If photos do not exist, put additional logic here
-        else {
-            echo "No photos exist";
-        }
+        // else {
+        //     echo "No photos exist";
+        // }
 
         echo $placeDetails;
 
@@ -198,7 +198,15 @@ if(isset($_POST["submit"])) {
             </form>
         </div>
 
+
+        <div id="photosDiv"></div>
+
         <script>
+
+        var script = document.currentScript;
+        var fullUrl = script.src;
+
+        var bodyElement = document.getElementsByTagName('body')[0];
 
         // Enable Search button only after user's geolocation is fetched
         window.onload = function() {
@@ -253,6 +261,29 @@ if(isset($_POST["submit"])) {
                 xhr.onload = function() {
                     if (xhr.status === 200) {
                         var placeDetailsJSON = JSON.parse(xhr.responseText);
+                        console.log(placeDetailsJSON);
+                        var reviews = placeDetailsJSON["result"]["reviews"];
+                        console.log(reviews);
+
+                        if ('photos' in placeDetailsJSON["result"]) {
+                            console.log("Photos exist");
+                            
+                            photosHTML = '';
+                            for (let i = 0 ; i < 5 ; i++) {
+                                photosHTML += '<img src="' + fullUrl + '/images/photo' + i + '.png"/>';
+                            }
+
+                            var photosDiv = document.createElement('div');
+                            photosDiv.innerHTML = photosHTML;
+                            bodyElement.appendChild(photosDiv);
+                        }
+                        else {
+                            console.log("no photos");
+                            var noPhotosDiv = document.createElement('div');
+                            noPhotosDiv.innerHTML = 'No Reviews Found';
+                            bodyElement.appendChild(noPhotosDiv);
+                        }
+
                     }
                 };
                 xhr.open('POST', 'main.php');
@@ -320,8 +351,6 @@ if(isset($_POST["submit"])) {
                         }
                         tableHTML += "</table>";
                     }
-
-                    var bodyElement = document.getElementsByTagName('body')[0];
 
                     var userNameSpan = document.createElement('span');
                     userNameSpan.innerHTML = tableHTML;
