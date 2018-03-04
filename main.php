@@ -2,19 +2,47 @@
 
 $nearbyPlacesJSON = '';
 
+$key = YOUR_API_KEY;
+
 if (isset($_POST)) {
 
-    $request_body = file_get_contents('php://input');
-    $data = json_decode($request_body,true);
+    $requestBody = file_get_contents('php://input');
+    $data = json_decode($requestBody,true);
     if ($data['funcName'] == 'displayPlaceDetails') {
-        echo $data['placeID'];
+        $placeID = $data['placeID'];
+        $url = "https://maps.googleapis.com/maps/api/place/details/json?placeid=$placeID&key=$key";
+        $placeDetails = file_get_contents($url);
+        $placeDetailsJSON = json_decode($placeDetails,true);
+
+        // If photos exist, call Google Places API "Places Photos" to get max 5 high-res photos
+        if(array_key_exists('photos', $placeDetailsJSON["result"])) {
+            $photos = $placeDetailsJSON["result"]["photos"];
+            $countPhotos = count($photos);
+            if ($countPhotos > 5) {
+                $countPhotos = 5;
+            }
+            
+            $maxWidth = 750;
+            for ($i = 0 ; $i < $countPhotos ; $i++) {
+                $photoReference = $photos[$i]["photo_reference"];
+                $imageURL = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=$maxWidth&photoreference=$photoReference&key=$key";
+                $image = file_get_contents($imageURL);
+                file_put_contents($_SERVER['DOCUMENT_ROOT'].'/images/photo'.$i.'.png', $image); 
+            }
+        }
+
+        // If photos do not exist, put additional logic here
+        else {
+            echo "No photos exist";
+        }
+
+        echo $placeDetails;
+
         die();
     }
 }
 
 if(isset($_POST["submit"])) {
-
-    $key = YOUR_API_KEY;
 
     // User has entered location
     // Fetch latitude and longitude
@@ -40,7 +68,7 @@ if(isset($_POST["submit"])) {
     }
     $radius = $distance * 1609.34;
 
-    $keyword = $_POST['keyword'];
+    $keyword = urlencode($_POST['keyword']);
     $type = $_POST['category'];
 
     //If type is default, pass empty string as type parameter
@@ -224,9 +252,7 @@ if(isset($_POST["submit"])) {
                 var xhr = new XMLHttpRequest();
                 xhr.onload = function() {
                     if (xhr.status === 200) {
-                        // var userInfo = JSON.parse(xhr.responseText);
-                        console.log("I have returned.");
-                        console.log(xhr.responseText);
+                        var placeDetailsJSON = JSON.parse(xhr.responseText);
                     }
                 };
                 xhr.open('POST', 'main.php');
