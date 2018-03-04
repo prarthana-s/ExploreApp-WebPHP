@@ -267,7 +267,19 @@ if(isset($_POST["submit"])) {
                         // Display reviews
                         if ('reviews' in placeDetailsResult) {
                             var reviews = placeDetailsJSON["result"]["reviews"];
-                            console.log(reviews);
+                            reviewsHTML = '<table id="reviewsTable">';
+                            for (let i = 0 ; i < reviews.length ; i++) {
+                                let authorName = reviews[i]["author_name"];
+                                let userPhotoURL = reviews[i]["profile_photo_url"];
+                                let reviewText = reviews[i]["text"];
+
+                                reviewsHTML += '<tr><td><img class="userPhoto" src="' + userPhotoURL + '" alt="user image"/>' + authorName + '</tr><tr><td>' + reviewText + '</td></tr>';
+                            }
+                            reviewsHTML += "</table>";
+                            var reviewsDiv = document.createElement('div');
+                            reviewsDiv.innerHTML = reviewsHTML;
+                            bodyElement.appendChild(reviewsDiv);
+                            
                         }
                         else {
                             console.log("no reviews");
