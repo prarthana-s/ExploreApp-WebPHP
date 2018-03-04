@@ -291,9 +291,14 @@ if(isset($_POST["submit"])) {
                         // Display photos
                         if ('photos' in placeDetailsResult) {
                             console.log("Photos exist");
+
+                            let photosLen = placeDetailsResult["photos"].length;
+
+                            photosLen > 5 ? photosLen = 5 : photosLen = photosLen ;
                             
                             photosHTML = '';
-                            for (let i = 0 ; i < 5 ; i++) {
+
+                            for (let i = 0 ; i < photosLen ; i++) {
                                 photosHTML += '<a target="_blank" href="' + fullUrl + '/images/photo' + i + '.png"><img src="' + fullUrl + '/images/photo' + i + '.png"/></a>';
                             }
 
