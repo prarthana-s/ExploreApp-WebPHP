@@ -357,26 +357,39 @@ if(isset($_POST["submit"])) {
         function toggleReviewsFunc() {
             var reviewsBody = document.getElementsByClassName('reviewsBody')[0];
             var photosBody = document.getElementsByClassName('photosBody')[0];
+
+            var reviewsPanel = document.getElementById('reviewsPanel');
+            var photosPanel = document.getElementById('photosPanel');
+
             console.log(reviewsBody.style);
             if (reviewsBody.style.display == 'block') {
                 reviewsBody.style.display = 'none';
+                reviewsPanel.innerHTML = 'Click here to show reviews.'
             }
             else {
                 reviewsBody.style.display = 'block';   
+                reviewsPanel.innerHTML = 'Click here to hide reviews.'
                 photosBody.style.display = 'none';
-
+                photosPanel.innerHTML = 'Click here to show photos.'                
             }
         }
 
         function togglePhotosFunc() {
             var reviewsBody = document.getElementsByClassName('reviewsBody')[0];
             var photosBody = document.getElementsByClassName('photosBody')[0];
+
+            var reviewsPanel = document.getElementById('reviewsPanel');
+            var photosPanel = document.getElementById('photosPanel');
+            
             if (photosBody.style.display == 'block') {
                 photosBody.style.display = 'none';
+                photosPanel.innerHTML = 'Click here to show photos.'   
             }
             else {
                 photosBody.style.display = 'block'; 
-                reviewsBody.style.display = 'none';                               
+                photosPanel.innerHTML = 'Click here to hide photos.'                                
+                reviewsBody.style.display = 'none';               
+                reviewsPanel.innerHTML = 'Click here to show reviews.'                                                
             }
         }
 
