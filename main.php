@@ -273,6 +273,10 @@ if(isset($_POST["submit"])) {
 
                         var arrowWidth = 30;
 
+                        var panelName = document.createElement('div');
+                        var panelNameHTML = '<div id="panelName">' + placeDetailsResult["name"] + '</div>';
+                        panelName.innerHTML = panelNameHTML;
+
                         var reviewsPanel = document.createElement('div');
                         var reviewsPanelHTML = '<div id="reviewsPanel">Click here to view reviews</div><div class="arrow"><img class="toggleReviewsArrow" width="' + arrowWidth + '" src="' + arrowDownIcon + '"/></div>';
                         reviewsPanel.innerHTML = reviewsPanelHTML;
@@ -322,6 +326,12 @@ if(isset($_POST["submit"])) {
                             photosBody.innerHTML = 'No Photos Found';
                         }
                         photosPanel.appendChild(photosBody);
+
+
+                        var placesTable = document.getElementById('placesTable');
+                        placesTable.parentNode.removeChild(placesTable);
+
+                        bodyElement.appendChild(panelName);
 
                         bodyElement.appendChild(reviewsPanel);
                         bodyElement.appendChild(photosPanel);
