@@ -86,6 +86,12 @@ if(isset($_POST["submit"])) {
 
     $url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=$radius&type=$type&keyword=$keyword&key=$key";
     $nearbyPlacesJSON = file_get_contents($url);
+
+    $x = json_decode($nearbyPlacesJSON,true);
+    $x['lat'] = $lat;
+    $x['lon'] = $lon;
+    $nearbyPlacesJSON = json_encode($x);
+    // echo $nearbyPlacesJSON;
 }
 
 ?>
@@ -130,7 +136,6 @@ if(isset($_POST["submit"])) {
 
         #lineBreak {
             align: center;
-            font-color
         }
 
         table, td, th {
@@ -152,12 +157,17 @@ if(isset($_POST["submit"])) {
 
         .map {
             height: 300px;
+            z-index: 0;
+            display: none;
             /* position: relative; */
         }
 
-        /* .modesOfTravel {
+        .modesOfTravel {
             position: absolute;
-        } */
+            background-color: lightgrey;
+            z-index: 1;
+            display: none;
+        }
 
 
         html, body {
@@ -372,12 +382,12 @@ if(isset($_POST["submit"])) {
                     placeID : target.dataset.placeid
                 }));
             }
-            else if (target.className == 'placeAddress') {
+            else if (target.className == 'placeAddressLine') {
                 var map;
 
-                locationCoordinates = {lat: parseFloat(target.dataset.lat), lng: parseFloat(target.dataset.lng)};
+                locationCoordinates = {lat: parseFloat(target.parentNode.dataset.lat), lng: parseFloat(target.parentNode.dataset.lng)};
 
-                var mapID = 'map' + target.dataset.placeid;
+                var mapID = 'map' + target.parentNode.dataset.placeid;
                 map = new google.maps.Map(document.getElementById(mapID), {
                     center: locationCoordinates,
                     zoom: 18
@@ -386,6 +396,52 @@ if(isset($_POST["submit"])) {
                     position: locationCoordinates,
                     map: map
                 });
+
+                var modesOfTravelID = 'modesOfTravel' + target.parentNode.dataset.placeid;
+                var thisModesOfTravel = document.getElementById(modesOfTravelID);
+                thisModesOfTravel.style.display = 'block';
+
+                var thisMap = document.getElementById(mapID);
+                thisMap.style.display = 'block';
+            } 
+            else if (target.parentNode.className == 'modesOfTravel'){
+
+                var lat = target.parentNode.parentNode.dataset.lat;
+                var lng = target.parentNode.parentNode.dataset.lng;
+                
+                var tableElem = document.getElementById('placesTable');
+                var myLat = tableElem.dataset.mylat;
+                var myLon = tableElem.dataset.mylon;
+
+                var directionsService = new google.maps.DirectionsService();
+                var directionsDisplay = new google.maps.DirectionsRenderer();
+                var originCoords = new google.maps.LatLng(myLat,myLon);
+                var destCoords = new google.maps.LatLng(lat,lng);
+                var mapOptions = {
+                    zoom: 14,
+                    center: destCoords
+                }
+
+                var mapID = 'map' + target.parentNode.parentNode.dataset.placeid;
+                map = new google.maps.Map(document.getElementById(mapID), {
+                    center: locationCoordinates,
+                    zoom: 18
+                });
+
+                var map = new google.maps.Map(document.getElementById(mapID), mapOptions);
+                directionsDisplay.setMap(map);
+        
+                var request = {
+                    origin: originCoords,
+                    destination: destCoords,
+                    travelMode: target.className.toUpperCase()
+                };
+                directionsService.route(request, function(response, status) {
+                    if (status == 'OK') {
+                    directionsDisplay.setDirections(response);
+                    }
+                });
+ 
             }
         }
 
@@ -470,8 +526,8 @@ if(isset($_POST["submit"])) {
 
         function generateHTML(address, placeID, lat, lng) {
             addrHTML = '';
-            addrHTML += '<div data-lat="' + lat + '" data-lng="' + lng + '" data-placeID="' + placeID + '" class="placeAddress">' + address + 
-            '<div class="modesOfTravel"><span class="bike">Bike</span>,<span class="walk">Walk</span>,<span class="drive">Drive</span></div> \
+            addrHTML += '<div data-lat="' + lat + '" data-lng="' + lng + '" data-placeID="' + placeID + '" class="placeAddress"><div class="placeAddressLine">' + address + 
+            '</div><div class="modesOfTravel" id="modesOfTravel' + placeID + '"><div class="walking">Walk there</div><div class="bicycling">Bike there</div><div class="driving">Drive there</div></div> \
             <div class="map" id="map' + placeID + '"></div> \
             </div>';
             return addrHTML;
@@ -490,13 +546,15 @@ if(isset($_POST["submit"])) {
                     jsonObj = JSON.parse(jsonObj);
                     
                     var results = jsonObj.results;
+                    var myLat = jsonObj.lat;
+                    var myLon = jsonObj.lon;
 
                     if (!results.length) {
                         tableHTML = '<div id="noRecordsFound"><p>No records have been found.</p></div';
                     }
 
                     else {
-                        tableHTML = '<table id="placesTable"><tr><th>Icon</th><th>Name</th><th>Address</th></tr>';
+                        tableHTML = '<table id="placesTable" data-myLat="' + myLat + '" data-myLon="' + myLon + '"><tr><th>Icon</th><th>Name</th><th>Address</th></tr>';
 
                         for (let i=0; i<results.length; i++) {
                             var icon = results[i].icon;
@@ -506,7 +564,7 @@ if(isset($_POST["submit"])) {
                             var lat = results[i].geometry.location.lat;
                             var lng = results[i].geometry.location.lng;
 
-                            tableHTML += '<tr><td><img class="placeIcon" src="' + icon + '" alt="user image"/></td><td class="placeName" data-placeid="' + placeID + '">' + name + '</td><td>' + generateHTML(address,placeID,lat,lng) + '</td></tr>';
+                            tableHTML += '<tr><td><img class="placeIcon" src="' + icon + '" alt="user image"/></td><td class="placeName" data-placeid="' + placeID + '">' + name + '</td><td class="addressInfo">' + generateHTML(address,placeID,lat,lng) + '</td></tr>';
                         }
                         tableHTML += '</table>';
                     }
@@ -517,6 +575,7 @@ if(isset($_POST["submit"])) {
                     
                     var placesTable = document.getElementById('placesTable');
                     placesTable.addEventListener('click',displayPlaceDetails,false);
+
                 }
             }
         };
