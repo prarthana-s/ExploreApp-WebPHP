@@ -6,48 +6,42 @@ $key = YOUR_API_KEY;
 
 if (isset($_POST['funcName'])) {
 
+    // Check if the request is for showing reviews and photos
     if ($_POST['funcName'] == 'displayPlaceDetails') {
 
-        $requestBody = file_get_contents('php://input');
-        $data = json_decode($requestBody,true);
+        // Call Google Places API to fetch place details
+        $placeID = $_POST['placeID'];
+        $url = "https://maps.googleapis.com/maps/api/place/details/json?placeid=$placeID&key=$key";
+        $placeDetails = file_get_contents($url);
+        $placeDetailsJSON = json_decode($placeDetails,true);
 
-        // Check if the request is for showing reviews and photos
-        if ($data['funcName'] == 'displayPlaceDetails') {
-
-            // Call Google Places API to fetch place details
-            $placeID = $data['placeID'];
-            $url = "https://maps.googleapis.com/maps/api/place/details/json?placeid=$placeID&key=$key";
-            $placeDetails = file_get_contents($url);
-            $placeDetailsJSON = json_decode($placeDetails,true);
-
-            // If photos exist, call Google Places API "Places Photos" to get max 5 high-res photos
-            if(array_key_exists('photos', $placeDetailsJSON["result"])) {
-                $photos = $placeDetailsJSON["result"]["photos"];
-                $countPhotos = count($photos);
-                if ($countPhotos > 5) {
-                    $countPhotos = 5;
-                }
-                
-                // Fetch the photos and store them in a folder named "images" on the server
-                // Name the photos sequentially as photo0, photo1 and so on with png extension
-                $maxWidth = 750;
-                for ($i = 0 ; $i < $countPhotos ; $i++) {
-                    $photoReference = $photos[$i]["photo_reference"];
-                    $imageURL = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=$maxWidth&photoreference=$photoReference&key=$key";
-                    $image = file_get_contents($imageURL);
-                    file_put_contents($_SERVER['DOCUMENT_ROOT'].'/images/photo'.$i.'.png', $image); 
-                }
+        // If photos exist, call Google Places API "Places Photos" to get max 5 high-res photos
+        if(array_key_exists('photos', $placeDetailsJSON["result"])) {
+            $photos = $placeDetailsJSON["result"]["photos"];
+            $countPhotos = count($photos);
+            if ($countPhotos > 5) {
+                $countPhotos = 5;
             }
-
-            // If photos do not exist, put additional logic here
-            // else {
-            //     echo "No photos exist";
-            // }
-
-            echo $placeDetails;
-
-            die();
+            
+            // Fetch the photos and store them in a folder named "images" on the server
+            // Name the photos sequentially as photo0, photo1 and so on with png extension
+            $maxWidth = 750;
+            for ($i = 0 ; $i < $countPhotos ; $i++) {
+                $photoReference = $photos[$i]["photo_reference"];
+                $imageURL = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=$maxWidth&photoreference=$photoReference&key=$key";
+                $image = file_get_contents($imageURL);
+                file_put_contents($_SERVER['DOCUMENT_ROOT'].'/images/photo'.$i.'.png', $image); 
+            }
         }
+
+        // If photos do not exist, put additional logic here
+        // else {
+        //     echo "No photos exist";
+        // }
+
+        echo $placeDetails;
+
+        die();
     }
 
     // if(isset($_POST["thisFuncName"]) == 'findNearby') {
@@ -357,27 +351,23 @@ if (isset($_POST['funcName'])) {
 
             xhttp2.open("POST",url, true);
             var formElems = document.getElementById("mainForm").elements;
-            // console.log(formElems.namedItem());
-            // CHANGE THIS!!
             xhttp2.setRequestHeader("Content-type","application/x-www-form-urlencoded");
             var params = {funcName: 'nearbyPlaces', keyword: formElems.namedItem("keyword").value, category: formElems.namedItem("category").value, distance: formElems.namedItem("distance").value, locationRadio: formElems.namedItem("locationRadio").value, locationInput: formElems.namedItem("locationInput").value, hereLatitude: formElems.namedItem("hereLatitude").value, hereLongitude: formElems.namedItem("hereLongitude").value};
-            // console.log(params);
-            params = param(params);
+            params = constructEncodedQuery(params);
             xhttp2.send(params);
-
         }
 
-        function param(object) {
-            var encodedString = '';
-            for (var prop in object) {
-                if (object.hasOwnProperty(prop)) {
-                    if (encodedString.length > 0) {
-                        encodedString += '&';
+        function constructEncodedQuery(object) {
+            var encodedQueryString = '';
+            for (var property in object) {
+                if (object.hasOwnProperty(property)) {
+                    if (encodedQueryString.length > 0) {
+                        encodedQueryString += '&';
                     }
-                    encodedString += encodeURI(prop + '=' + object[prop]);
+                    encodedQueryString += encodeURI(property + '=' + object[property]);
                 }
             }
-            return encodedString;
+            return encodedQueryString;
         }
 
 
@@ -388,10 +378,10 @@ if (isset($_POST['funcName'])) {
             // Required because event listener is on the entire table element
             // User could have also clicked on an address or icon
             if (target.className == 'placeName') {
-                var xhr = new XMLHttpRequest();
-                xhr.onload = function() {
-                    if (xhr.status === 200) {
-                        var placeDetailsJSON = JSON.parse(xhr.responseText);
+                var xhttp3 = new XMLHttpRequest();
+                xhttp3.onload = function() {
+                    if (xhttp3.status === 200) {
+                        var placeDetailsJSON = JSON.parse(xhttp3.responseText);
                         var placeDetailsResult = placeDetailsJSON["result"];
 
                         var arrowWidth = 30;
@@ -466,12 +456,11 @@ if (isset($_POST['funcName'])) {
                         togglePhotosArrow.addEventListener('click', togglePhotosFunc);
                     }
                 };
-                xhr.open('POST', 'main.php');
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.send(JSON.stringify({
-                    funcName: 'displayPlaceDetails', 
-                    placeID : target.dataset.placeid
-                }));
+                xhttp3.open('POST', 'main.php',true);
+                xhttp3.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+                var params = {funcName: 'displayPlaceDetails', placeID: target.dataset.placeid};
+                params = constructEncodedQuery(params);
+                xhttp3.send(params);
             }
             else if (target.className == 'placeAddressLine') {
                 var map;
