@@ -4,94 +4,99 @@ $nearbyPlacesJSON = '';
 
 $key = YOUR_API_KEY;
 
-if (isset($_POST)) {
+if (isset($_POST['funcName'])) {
 
-    $requestBody = file_get_contents('php://input');
-    $data = json_decode($requestBody,true);
+    if ($_POST['funcName'] == 'displayPlaceDetails') {
 
-    // Check if the request is for showing reviews and photos
-    if ($data['funcName'] == 'displayPlaceDetails') {
+        $requestBody = file_get_contents('php://input');
+        $data = json_decode($requestBody,true);
 
-        // Call Google Places API to fetch place details
-        $placeID = $data['placeID'];
-        $url = "https://maps.googleapis.com/maps/api/place/details/json?placeid=$placeID&key=$key";
-        $placeDetails = file_get_contents($url);
-        $placeDetailsJSON = json_decode($placeDetails,true);
+        // Check if the request is for showing reviews and photos
+        if ($data['funcName'] == 'displayPlaceDetails') {
 
-        // If photos exist, call Google Places API "Places Photos" to get max 5 high-res photos
-        if(array_key_exists('photos', $placeDetailsJSON["result"])) {
-            $photos = $placeDetailsJSON["result"]["photos"];
-            $countPhotos = count($photos);
-            if ($countPhotos > 5) {
-                $countPhotos = 5;
+            // Call Google Places API to fetch place details
+            $placeID = $data['placeID'];
+            $url = "https://maps.googleapis.com/maps/api/place/details/json?placeid=$placeID&key=$key";
+            $placeDetails = file_get_contents($url);
+            $placeDetailsJSON = json_decode($placeDetails,true);
+
+            // If photos exist, call Google Places API "Places Photos" to get max 5 high-res photos
+            if(array_key_exists('photos', $placeDetailsJSON["result"])) {
+                $photos = $placeDetailsJSON["result"]["photos"];
+                $countPhotos = count($photos);
+                if ($countPhotos > 5) {
+                    $countPhotos = 5;
+                }
+                
+                // Fetch the photos and store them in a folder named "images" on the server
+                // Name the photos sequentially as photo0, photo1 and so on with png extension
+                $maxWidth = 750;
+                for ($i = 0 ; $i < $countPhotos ; $i++) {
+                    $photoReference = $photos[$i]["photo_reference"];
+                    $imageURL = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=$maxWidth&photoreference=$photoReference&key=$key";
+                    $image = file_get_contents($imageURL);
+                    file_put_contents($_SERVER['DOCUMENT_ROOT'].'/images/photo'.$i.'.png', $image); 
+                }
             }
-            
-            // Fetch the photos and store them in a folder named "images" on the server
-            // Name the photos sequentially as photo0, photo1 and so on with png extension
-            $maxWidth = 750;
-            for ($i = 0 ; $i < $countPhotos ; $i++) {
-                $photoReference = $photos[$i]["photo_reference"];
-                $imageURL = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=$maxWidth&photoreference=$photoReference&key=$key";
-                $image = file_get_contents($imageURL);
-                file_put_contents($_SERVER['DOCUMENT_ROOT'].'/images/photo'.$i.'.png', $image); 
-            }
+
+            // If photos do not exist, put additional logic here
+            // else {
+            //     echo "No photos exist";
+            // }
+
+            echo $placeDetails;
+
+            die();
+        }
+    }
+
+    // if(isset($_POST["thisFuncName"]) == 'findNearby') {
+    else if($_POST['funcName'] == 'nearbyPlaces') {
+
+        // User has entered location
+        // Fetch latitude and longitude
+        if ($_POST['locationRadio'] == 'location') {
+            $locationName = urlencode($_POST['locationInput']);
+            $url = "https://maps.googleapis.com/maps/api/geocode/json?address=$locationName&key=$key";
+            $locationDetails = file_get_contents($url);
+            $locationDetailsJSON = json_decode($locationDetails,true);
+            $lat = $locationDetailsJSON["results"][0]["geometry"]["location"]["lat"];
+            $lon = $locationDetailsJSON["results"][0]["geometry"]["location"]["lng"];
         }
 
-        // If photos do not exist, put additional logic here
-        // else {
-        //     echo "No photos exist";
-        // }
+        // Use current location coordinates
+        else {
+            $lat = $_POST['hereLatitude'];
+            $lon = $_POST['hereLongitude'];
+        }
 
-        echo $placeDetails;
+        // Miles to metres conversion
+        $distance = $_POST['distance'];
+        if ($distance == 0) {
+            $distance = 10;
+        }
+        $radius = $distance * 1609.34;
 
+
+        // Handle case where keyword consists of multiple words/special characters
+        $keyword = urlencode($_POST['keyword']);
+        $type = $_POST['category'];
+
+        //If type is default, pass empty string as type parameter
+        if ($type == 'default') {
+            $type = "";
+        }
+
+        $url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=$radius&type=$type&keyword=$keyword&key=$key";
+        $nearbyPlacesJSON = file_get_contents($url);
+
+        $x = json_decode($nearbyPlacesJSON,true);
+        $x['lat'] = $lat;
+        $x['lon'] = $lon;
+        $nearbyPlacesJSON = json_encode($x);
+        echo $nearbyPlacesJSON;
         die();
     }
-}
-
-if(isset($_POST["submit"])) {
-
-    // User has entered location
-    // Fetch latitude and longitude
-    if ($_POST['locationRadio'] == 'location') {
-        $locationName = urlencode($_POST['locationInput']);
-        $url = "https://maps.googleapis.com/maps/api/geocode/json?address=$locationName&key=$key";
-        $locationDetails = file_get_contents($url);
-        $locationDetailsJSON = json_decode($locationDetails,true);
-        $lat = $locationDetailsJSON["results"][0]["geometry"]["location"]["lat"];
-        $lon = $locationDetailsJSON["results"][0]["geometry"]["location"]["lng"];
-    }
-
-    // Use current location coordinates
-    else {
-        $lat = $_POST['hereLatitude'];
-        $lon = $_POST['hereLongitude'];
-    }
-
-    // Miles to metres conversion
-    $distance = $_POST['distance'];
-    if ($distance == 0) {
-        $distance = 10;
-    }
-    $radius = $distance * 1609.34;
-
-
-    // Handle case where keyword consists of multiple words/special characters
-    $keyword = urlencode($_POST['keyword']);
-    $type = $_POST['category'];
-
-    //If type is default, pass empty string as type parameter
-    if ($type == 'default') {
-        $type = "";
-    }
-
-    $url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lon&radius=$radius&type=$type&keyword=$keyword&key=$key";
-    $nearbyPlacesJSON = file_get_contents($url);
-
-    $x = json_decode($nearbyPlacesJSON,true);
-    $x['lat'] = $lat;
-    $x['lon'] = $lon;
-    $nearbyPlacesJSON = json_encode($x);
-    // echo $nearbyPlacesJSON;
 }
 
 ?>
@@ -203,7 +208,7 @@ if(isset($_POST["submit"])) {
             <hr id="lineBreak">
             
             <div class="formContainer">
-                <form id="mainForm" method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) ?>">
+                <form id="mainForm" method="POST" onsubmit="return false" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) ?>">
 
                     <div class="keywordElement">
                         <label for="keyword">Keyword:</label> 
@@ -281,7 +286,10 @@ if(isset($_POST["submit"])) {
                     var searchButton = document.getElementById('searchButton');
                     searchButton.removeAttribute('disabled'); 
                     document.getElementById('hereLatitude').value = jsonObj.lat; 
-                    document.getElementById('hereLongitude').value = jsonObj.lon;                    
+                    document.getElementById('hereLongitude').value = jsonObj.lon;  
+                    
+                    var submitButton = document.getElementById('searchButton');
+                    submitButton.addEventListener('click',submitForm,false);
                 }
             };
 
@@ -296,6 +304,81 @@ if(isset($_POST["submit"])) {
 
         radioSelectionLoc.addEventListener('change',toggleRequired,false);
         radioSelectionHere.addEventListener('change',disableTextBox,false);
+
+
+        function submitForm() {
+
+            // AJAX call to PHP script to fetch nearby places JSON data
+            var xhttp2 = new XMLHttpRequest();
+            var url = "main.php";
+
+            // Process the nearby places JSON data and display in tabular form
+            xhttp2.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    jsonObj = xhttp2.responseText;
+
+                    if (jsonObj) {
+                        jsonObj = JSON.parse(jsonObj);
+                        
+                        var results = jsonObj.results;
+                        var myLat = jsonObj.lat;
+                        var myLon = jsonObj.lon;
+
+                        if (!results.length) {
+                            tableHTML = '<div id="noRecordsFound"><p>No records have been found.</p></div';
+                        }
+
+                        else {
+                            tableHTML = '<table id="placesTable" data-myLat="' + myLat + '" data-myLon="' + myLon + '"><tr><th>Icon</th><th>Name</th><th>Address</th></tr>';
+
+                            for (let i=0; i<results.length; i++) {
+                                var icon = results[i].icon;
+                                var name = results[i].name;
+                                var address = results[i].vicinity;
+                                var placeID = results[i].place_id;
+                                var lat = results[i].geometry.location.lat;
+                                var lng = results[i].geometry.location.lng;
+
+                                tableHTML += '<tr><td><img class="placeIcon" src="' + icon + '" alt="user image"/></td><td class="placeName" data-placeid="' + placeID + '">' + name + '</td><td class="addressInfo">' + generateHTML(address,placeID,lat,lng) + '</td></tr>';
+                            }
+                            tableHTML += '</table>';
+                        }
+
+                        var userNameSpan = document.createElement('span');
+                        userNameSpan.innerHTML = tableHTML;
+                        bodyElement.appendChild(userNameSpan);
+                        
+                        var placesTable = document.getElementById('placesTable');
+                        placesTable.addEventListener('click',displayPlaceDetails,false);
+
+                    }
+                }
+            };
+
+            xhttp2.open("POST",url, true);
+            var formElems = document.getElementById("mainForm").elements;
+            // console.log(formElems.namedItem());
+            // CHANGE THIS!!
+            xhttp2.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            var params = {funcName: 'nearbyPlaces', keyword: formElems.namedItem("keyword").value, category: formElems.namedItem("category").value, distance: formElems.namedItem("distance").value, locationRadio: formElems.namedItem("locationRadio").value, locationInput: formElems.namedItem("locationInput").value, hereLatitude: formElems.namedItem("hereLatitude").value, hereLongitude: formElems.namedItem("hereLongitude").value};
+            // console.log(params);
+            params = param(params);
+            xhttp2.send(params);
+
+        }
+
+        function param(object) {
+            var encodedString = '';
+            for (var prop in object) {
+                if (object.hasOwnProperty(prop)) {
+                    if (encodedString.length > 0) {
+                        encodedString += '&';
+                    }
+                    encodedString += encodeURI(prop + '=' + object[prop]);
+                }
+            }
+            return encodedString;
+        }
 
 
         function displayPlaceDetails(ev) {
@@ -543,56 +626,6 @@ if(isset($_POST["submit"])) {
             </div>';
             return addrHTML;
         }
-
-        // AJAX call to PHP script to fetch nearby places JSON data
-        var xhttp2 = new XMLHttpRequest();
-        var url = "main.php";
-
-        // Process the nearby places JSON data and display in tabular form
-        xhttp2.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                jsonObj = <?php echo json_encode($nearbyPlacesJSON); ?>;
-
-                if (jsonObj) {
-                    jsonObj = JSON.parse(jsonObj);
-                    
-                    var results = jsonObj.results;
-                    var myLat = jsonObj.lat;
-                    var myLon = jsonObj.lon;
-
-                    if (!results.length) {
-                        tableHTML = '<div id="noRecordsFound"><p>No records have been found.</p></div';
-                    }
-
-                    else {
-                        tableHTML = '<table id="placesTable" data-myLat="' + myLat + '" data-myLon="' + myLon + '"><tr><th>Icon</th><th>Name</th><th>Address</th></tr>';
-
-                        for (let i=0; i<results.length; i++) {
-                            var icon = results[i].icon;
-                            var name = results[i].name;
-                            var address = results[i].vicinity;
-                            var placeID = results[i].place_id;
-                            var lat = results[i].geometry.location.lat;
-                            var lng = results[i].geometry.location.lng;
-
-                            tableHTML += '<tr><td><img class="placeIcon" src="' + icon + '" alt="user image"/></td><td class="placeName" data-placeid="' + placeID + '">' + name + '</td><td class="addressInfo">' + generateHTML(address,placeID,lat,lng) + '</td></tr>';
-                        }
-                        tableHTML += '</table>';
-                    }
-
-                    var userNameSpan = document.createElement('span');
-                    userNameSpan.innerHTML = tableHTML;
-                    bodyElement.appendChild(userNameSpan);
-                    
-                    var placesTable = document.getElementById('placesTable');
-                    placesTable.addEventListener('click',displayPlaceDetails,false);
-
-                }
-            }
-        };
-
-        xhttp2.open("GET",url, true);
-        xhttp2.send();
 
     </script>
 
