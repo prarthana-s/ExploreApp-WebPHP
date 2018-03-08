@@ -157,15 +157,23 @@ if(isset($_POST["submit"])) {
 
         .map {
             height: 300px;
-            z-index: 0;
+            z-index: 2;
             display: none;
             /* position: relative; */
+        }
+
+        .toolTip {
+            height: 300px;
+            width: 300px;
+            z-index: 1;
+            position: absolute;
+            display: none;
         }
 
         .modesOfTravel {
             position: absolute;
             background-color: lightgrey;
-            z-index: 1;
+            z-index: 3;
             display: none;
         }
 
@@ -176,9 +184,9 @@ if(isset($_POST["submit"])) {
             padding: 0;
         }
 
-        /* .placeAddress {
-            position : relative;
-        } */
+        .placeAddressLine {
+            position: relative;
+        }
 
     </style>
     
@@ -403,11 +411,14 @@ if(isset($_POST["submit"])) {
 
                 var thisMap = document.getElementById(mapID);
                 thisMap.style.display = 'block';
+
+                var toolTipID = 'toolTip' + target.parentNode.dataset.placeid;
+                var toolTip = document.getElementById(toolTipID);
+                toolTip.style.display = 'block';
             } 
             else if (target.parentNode.className == 'modesOfTravel'){
-
-                var lat = target.parentNode.parentNode.dataset.lat;
-                var lng = target.parentNode.parentNode.dataset.lng;
+                var lat = target.parentNode.parentNode.parentNode.dataset.lat;
+                var lng = target.parentNode.parentNode.parentNode.dataset.lng;
                 
                 var tableElem = document.getElementById('placesTable');
                 var myLat = tableElem.dataset.mylat;
@@ -422,7 +433,7 @@ if(isset($_POST["submit"])) {
                     center: destCoords
                 }
 
-                var mapID = 'map' + target.parentNode.parentNode.dataset.placeid;
+                var mapID = 'map' + target.parentNode.parentNode.parentNode.dataset.placeid;
                 map = new google.maps.Map(document.getElementById(mapID), {
                     center: locationCoordinates,
                     zoom: 18
@@ -430,7 +441,7 @@ if(isset($_POST["submit"])) {
 
                 var map = new google.maps.Map(document.getElementById(mapID), mapOptions);
                 directionsDisplay.setMap(map);
-        
+
                 var request = {
                     origin: originCoords,
                     destination: destCoords,
@@ -527,8 +538,8 @@ if(isset($_POST["submit"])) {
         function generateHTML(address, placeID, lat, lng) {
             addrHTML = '';
             addrHTML += '<div data-lat="' + lat + '" data-lng="' + lng + '" data-placeID="' + placeID + '" class="placeAddress"><div class="placeAddressLine">' + address + 
-            '</div><div class="modesOfTravel" id="modesOfTravel' + placeID + '"><div class="walking">Walk there</div><div class="bicycling">Bike there</div><div class="driving">Drive there</div></div> \
-            <div class="map" id="map' + placeID + '"></div> \
+            '</div><div class="toolTip" id="toolTip' + placeID + '"><div class="modesOfTravel" id="modesOfTravel' + placeID + '"><div class="walking">Walk there</div><div class="bicycling">Bike there</div><div class="driving">Drive there</div></div> \
+            <div class="map" id="map' + placeID + '"></div></div> \
             </div>';
             return addrHTML;
         }
