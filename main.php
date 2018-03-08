@@ -30,7 +30,7 @@ if (isset($_POST['funcName'])) {
                 $photoReference = $photos[$i]["photo_reference"];
                 $imageURL = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=$maxWidth&photoreference=$photoReference&key=$key";
                 $image = file_get_contents($imageURL);
-                file_put_contents($_SERVER['DOCUMENT_ROOT'].'/images/photo'.$i.'.png', $image); 
+                file_put_contents($_SERVER['DOCUMENT_ROOT'].'/photo'.$i.$placeID.'.png', $image); 
             }
         }
 
@@ -318,6 +318,16 @@ if (isset($_POST['funcName'])) {
                         var myLat = jsonObj.lat;
                         var myLon = jsonObj.lon;
 
+                        var panelName = document.getElementById('panelName');
+
+                        if (panelName) {
+                            var reviewsPanel = document.getElementById('outerReviewsPanel');
+                            var photosPanel = document.getElementById('outerPhotosPanel');
+                            panelName.parentNode.removeChild(panelName);
+                            reviewsPanel.parentNode.removeChild(reviewsPanel);
+                            photosPanel.parentNode.removeChild(photosPanel);
+                        }
+
                         if (!results.length) {
                             tableHTML = '<div id="noRecordsFound"><p>No records have been found.</p></div';
                         }
@@ -378,6 +388,7 @@ if (isset($_POST['funcName'])) {
             // Required because event listener is on the entire table element
             // User could have also clicked on an address or icon
             if (target.className == 'placeName') {
+                var placeID = target.dataset.placeid;
                 var xhttp3 = new XMLHttpRequest();
                 xhttp3.onload = function() {
                     if (xhttp3.status === 200) {
@@ -391,10 +402,12 @@ if (isset($_POST['funcName'])) {
                         panelName.innerHTML = panelNameHTML;
 
                         var reviewsPanel = document.createElement('div');
+                        reviewsPanel.id = 'outerReviewsPanel';
                         var reviewsPanelHTML = '<div id="reviewsPanel">Click here to view reviews</div><div class="arrow"><img class="toggleReviewsArrow" width="' + arrowWidth + '" src="' + arrowDownIcon + '"/></div>';
                         reviewsPanel.innerHTML = reviewsPanelHTML;
                         
                         var photosPanel = document.createElement('div');
+                        photosPanel.id = 'outerPhotosPanel';
                         var photosPanelHTML = '<div id="photosPanel">Click here to view photos</div><div class="arrow"><img class="togglePhotosArrow" width="' + arrowWidth + '" src="' + arrowDownIcon + '"/></div>';
                         photosPanel.innerHTML = photosPanelHTML;
                 
@@ -430,7 +443,7 @@ if (isset($_POST['funcName'])) {
                             photosLen > 5 ? photosLen = 5 : photosLen = photosLen ;
                             
                             for (let i = 0 ; i < photosLen ; i++) {
-                                photosHTML += '<a target="_blank" href="' + fullUrl + '/images/photo' + i + '.png"><img src="' + fullUrl + '/images/photo' + i + '.png"/></a>';
+                                photosHTML += '<a target="_blank" href="' + fullUrl + 'photo' + i + placeID + '.png"><img src="' + fullUrl + 'photo' + i + placeID + '.png"/></a>';
                             }
                             photosHTML += "</table>";
                             photosBody.innerHTML = photosHTML;
