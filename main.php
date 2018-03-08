@@ -150,6 +150,26 @@ if(isset($_POST["submit"])) {
             display:none;
         }
 
+        .map {
+            height: 300px;
+            /* position: relative; */
+        }
+
+        /* .modesOfTravel {
+            position: absolute;
+        } */
+
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* .placeAddress {
+            position : relative;
+        } */
+
     </style>
     
     
@@ -167,55 +187,56 @@ if(isset($_POST["submit"])) {
             <div class="formContainer">
                 <form id="mainForm" method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) ?>">
 
-                <div class="keywordElement">
-                    <label for="keyword">Keyword:</label> 
-                    <input type="text" name="keyword" value="" required>
-                </div>
+                    <div class="keywordElement">
+                        <label for="keyword">Keyword:</label> 
+                        <input type="text" name="keyword" value="" required>
+                    </div>
 
-                <div class="categoryElement">
-                    <label for="category">Category:</label> 
-                    <select name="category">
-                        <option value="default" selected>default</option>
-                        <option value="cafe">cafe</option>
-                        <option value="bakery">bakery</option>
-                        <option value="restaurant">restaurant</option>
-                        <option value="beauty_salon">beauty salon</option>
-                        <option value="casino">casino</option>
-                        <option value="movie_theater">movie theatre</option>
-                        <option value="lodging">lodging</option>
-                        <option value="airport">airport</option>
-                        <option value="train_station">train station</option>
-                        <option value="subway_station">subway station</option>
-                        <option value="bus_station">bus station</option>
-                    </select>
-                </div>
+                    <div class="categoryElement">
+                        <label for="category">Category:</label> 
+                        <select name="category">
+                            <option value="default" selected>default</option>
+                            <option value="cafe">cafe</option>
+                            <option value="bakery">bakery</option>
+                            <option value="restaurant">restaurant</option>
+                            <option value="beauty_salon">beauty salon</option>
+                            <option value="casino">casino</option>
+                            <option value="movie_theater">movie theatre</option>
+                            <option value="lodging">lodging</option>
+                            <option value="airport">airport</option>
+                            <option value="train_station">train station</option>
+                            <option value="subway_station">subway station</option>
+                            <option value="bus_station">bus station</option>
+                        </select>
+                    </div>
 
-                <div class="distanceLocationElement">
-                    <label for="distance">Distance (miles):</label> 
-                    <input type="text" name="distance" placeholder="10" value="">            
+                    <div class="distanceLocationElement">
+                        <label for="distance">Distance (miles):</label> 
+                        <input type="text" name="distance" placeholder="10" value="">            
 
-                    <span class="locationElement">
-                    <label for="locationRadio">from</label>
+                        <span class="locationElement">
+                        <label for="locationRadio">from</label>
 
-                    <input type="radio" id="locationRadioHere" name="locationRadio" value="here" checked='checked' required>
-                    <label for="locationRadioHere">Here</label>
+                        <input type="radio" id="locationRadioHere" name="locationRadio" value="here" checked='checked' required>
+                        <label for="locationRadioHere">Here</label>
 
-                    <input type="hidden" id="hereLatitude" name="hereLatitude" value="">
-                    <input type="hidden" id="hereLongitude" name="hereLongitude" value="">
-                    <br>
-                    <input type="radio" id="locationRadioLoc" name="locationRadio" value="location" required>
-                    <input type="text" id="locationInputText" name="locationInput" placeholder="location" value="">                        
-                </div>
+                        <input type="hidden" id="hereLatitude" name="hereLatitude" value="">
+                        <input type="hidden" id="hereLongitude" name="hereLongitude" value="">
+                        <br>
+                        <input type="radio" id="locationRadioLoc" name="locationRadio" value="location" required>
+                        <input type="text" id="locationInputText" name="locationInput" placeholder="location" value="">                        
+                    </div>
 
-                <div class="buttonElements">
-                    <button type="submit" id="searchButton" name="submit" value="search" disabled>Search</button>
-                    <button onclick="resetForm()" name="clear" value="clear">Clear</button>
-                </div>
-            </form>
+                    <div class="buttonElements">
+                        <button type="submit" id="searchButton" name="submit" value="search" disabled>Search</button>
+                        <button onclick="resetForm()" name="clear" value="clear">Clear</button>
+                    </div>
+                </form>                 
+            </div>
         </div>
 
 
-        <div id="photosDiv"></div>
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
 
         <script>
 
@@ -257,6 +278,7 @@ if(isset($_POST["submit"])) {
 
         radioSelectionLoc.addEventListener('change',toggleRequired,false);
         radioSelectionHere.addEventListener('change',disableTextBox,false);
+
 
         function displayPlaceDetails(ev) {
             let target = event.target;
@@ -350,6 +372,21 @@ if(isset($_POST["submit"])) {
                     placeID : target.dataset.placeid
                 }));
             }
+            else if (target.className == 'placeAddress') {
+                var map;
+
+                locationCoordinates = {lat: parseFloat(target.dataset.lat), lng: parseFloat(target.dataset.lng)};
+
+                var mapID = 'map' + target.dataset.placeid;
+                map = new google.maps.Map(document.getElementById(mapID), {
+                    center: locationCoordinates,
+                    zoom: 18
+                });
+                var marker = new google.maps.Marker({
+                    position: locationCoordinates,
+                    map: map
+                });
+            }
         }
 
         // If "Location" is selected, enable the text field and make it required
@@ -431,6 +468,15 @@ if(isset($_POST["submit"])) {
             }
         }
 
+        function generateHTML(address, placeID, lat, lng) {
+            addrHTML = '';
+            addrHTML += '<div data-lat="' + lat + '" data-lng="' + lng + '" data-placeID="' + placeID + '" class="placeAddress">' + address + 
+            '<div class="modesOfTravel"><span class="bike">Bike</span>,<span class="walk">Walk</span>,<span class="drive">Drive</span></div> \
+            <div class="map" id="map' + placeID + '"></div> \
+            </div>';
+            return addrHTML;
+        }
+
         // AJAX call to PHP script to fetch nearby places JSON data
         var xhttp2 = new XMLHttpRequest();
         var url = "main.php";
@@ -457,10 +503,12 @@ if(isset($_POST["submit"])) {
                             var name = results[i].name;
                             var address = results[i].vicinity;
                             var placeID = results[i].place_id;
+                            var lat = results[i].geometry.location.lat;
+                            var lng = results[i].geometry.location.lng;
 
-                            tableHTML += '<tr><td><img class="placeIcon" src="' + icon + '" alt="user image"/></td><td class="placeName" data-placeid="' + placeID + '">' + name + '</td><td class="placeAddress">' + address + '</td></tr>';
+                            tableHTML += '<tr><td><img class="placeIcon" src="' + icon + '" alt="user image"/></td><td class="placeName" data-placeid="' + placeID + '">' + name + '</td><td>' + generateHTML(address,placeID,lat,lng) + '</td></tr>';
                         }
-                        tableHTML += "</table>";
+                        tableHTML += '</table>';
                     }
 
                     var userNameSpan = document.createElement('span');
