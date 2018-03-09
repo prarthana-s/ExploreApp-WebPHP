@@ -103,19 +103,24 @@ if (isset($_POST['funcName'])) {
     <style>
         #heading {
             font-style: italic;
+            text-align: center;
+            margin: 0px;
         }
 
         .mainContainer {
-            text-align: center;
+            text-align: left;
             border: solid 1px grey;
             background-color: lightgrey;
-            padding-bottom: 20px;
-            margin-left: 250px;
-            margin-right: 250px;
+            padding: 10px 10px 20px 10px;
+            min-width: 600px;
+            max-width: 600px;
+            margin-right: auto;
+            margin-left: auto;
+            margin-top: 30px;
         }
 
         #noRecordsFound {
-            border: solid 1px grep;
+            border: solid 1px grey;
             background-color: lightgrey;
             text-align: center;
         }
@@ -130,28 +135,107 @@ if (isset($_POST['funcName'])) {
         }
 
         .buttonElements {
-            margin-left: 100px;
+            margin-left: 75px;
         }
 
         #lineBreak {
             align: center;
         }
 
-        table, td, th {
-            border: 1px solid black;
+        #placesTable, #placesTable td, #placesTable th {
+            border: 1px solid lightgrey;
             border-spacing: 0px;
+            /* margin-top: 20px; */
+            text-align: center;
         }
 
-        .iconImg {
+        td.placeName {
+            padding: 0px 10px 0px 10px;
+            min-width: 400px;
+        }
+
+        td.addressInfo {
+            padding: 0px 10px 0px 10px;
+            min-width: 450px;
+        }
+
+        img.placeIcon {
             width: 40px;
+        }
+
+        #tableContainer {
+            margin:auto;
+            display: table;
+            /* max-width: 900px;
+            min-width: 900px; */
+        }
+
+        #outerReviewsPanel, #outerPhotosPanel {
+            margin: auto;
+            margin-bottom: 20px;
+            max-width: 600px;
+            min-width: 600px;
+        }
+
+        #panelName {
+            margin: 20px auto 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        #photosTable tr, #photosTable td {
+            border: 1px solid lightgrey;
+            border-spacing: 0px;
+            /* margin-top: 20px; */
+            text-align: center;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        #reviewsTable tr, #reviewsTable td {
+            border: 1px solid lightgrey;
+            border-spacing: 0px;
+            border-collapse: collapse;
+            /* margin-top: 20px; */
+            /* text-align: center; */
+        }
+        
+
+        .photoOfLocation {
+            padding: 20px;
+            width: 570px;
+        }
+
+        .reviewsBody {
+            display:none;
+            border: solid 1px lightgrey;
         }
 
         .photosBody {
             display: none;
         }
 
-        .reviewsBody {
-            display:none;
+        .userPhoto {
+            width: 30px;
+        }
+
+        .userInfo {
+            text-align: center;
+        }
+
+        .authorName {
+            font-weight: bold;
+        }
+        
+        .reviewText {
+            font-weight: normal;
+            text-align: left;
+        }
+
+        #reviewsPanel, #photosPanel, .arrow {
+            text-align: center;
         }
 
         .map {
@@ -160,6 +244,7 @@ if (isset($_POST['funcName'])) {
             display: none;
             /* position: relative; */
         }
+
 
         .toolTip {
             height: 300px;
@@ -171,9 +256,14 @@ if (isset($_POST['funcName'])) {
 
         .modesOfTravel {
             position: absolute;
-            background-color: lightgrey;
+            background-color: #ededed;
             z-index: 3;
             display: none;
+            padding: 5px;
+        }
+
+        .walking, .bicycling, .driving {
+            padding-bottom: 5px;
         }
 
 
@@ -313,7 +403,7 @@ if (isset($_POST['funcName'])) {
 
                     if (jsonObj) {
                         jsonObj = JSON.parse(jsonObj);
-                        
+
                         var results = jsonObj.results;
                         var myLat = jsonObj.lat;
                         var myLon = jsonObj.lon;
@@ -328,12 +418,17 @@ if (isset($_POST['funcName'])) {
                             photosPanel.parentNode.removeChild(photosPanel);
                         }
 
+                        var existingTable = document.getElementById('placesTable') || document.getElementById('noRecordsFound');
+                        if (existingTable) {
+                            existingTable.parentNode.removeChild(existingTable);
+                        }
+
                         if (!results.length) {
                             tableHTML = '<div id="noRecordsFound"><p>No records have been found.</p></div';
                         }
 
                         else {
-                            tableHTML = '<table id="placesTable" data-myLat="' + myLat + '" data-myLon="' + myLon + '"><tr><th>Icon</th><th>Name</th><th>Address</th></tr>';
+                            tableHTML = '<table id="placesTable" data-myLat="' + myLat + '" data-myLon="' + myLon + '"><tr><th>Category</th><th>Name</th><th>Address</th></tr>';
 
                             for (let i=0; i<results.length; i++) {
                                 var icon = results[i].icon;
@@ -347,13 +442,15 @@ if (isset($_POST['funcName'])) {
                             }
                             tableHTML += '</table>';
                         }
+                        var tableContainer = document.createElement('div');
+                        tableContainer.id = 'tableContainer';
+                        tableContainer.innerHTML = tableHTML;
+                        bodyElement.appendChild(tableContainer);
 
-                        var userNameSpan = document.createElement('span');
-                        userNameSpan.innerHTML = tableHTML;
-                        bodyElement.appendChild(userNameSpan);
-                        
                         var placesTable = document.getElementById('placesTable');
-                        placesTable.addEventListener('click',displayPlaceDetails,false);
+                        if (placesTable) {
+                            placesTable.addEventListener('click',displayPlaceDetails,false);
+                        }
 
                     }
                 }
@@ -426,7 +523,7 @@ if (isset($_POST['funcName'])) {
                                 let userPhotoURL = reviews[i]["profile_photo_url"];
                                 let reviewText = reviews[i]["text"];
 
-                                reviewsHTML += '<tr><td><img class="userPhoto" src="' + userPhotoURL + '" alt="user image"/>' + authorName + '</tr><tr><td>' + reviewText + '</td></tr>';
+                                reviewsHTML += '<tr><td class="userInfo"><img class="userPhoto" src="' + userPhotoURL + '" alt="user image"/><span class="authorName">' + authorName + '</span></tr><tr><td class="reviewText">' + reviewText + '</td></tr>';
                             }
                             reviewsHTML += "</table>";
                             reviewsBody.innerHTML = reviewsHTML;
@@ -443,7 +540,7 @@ if (isset($_POST['funcName'])) {
                             photosLen > 5 ? photosLen = 5 : photosLen = photosLen ;
                             
                             for (let i = 0 ; i < photosLen ; i++) {
-                                photosHTML += '<a target="_blank" href="' + fullUrl + 'photo' + i + placeID + '.png"><img src="' + fullUrl + 'photo' + i + placeID + '.png"/></a>';
+                                photosHTML += '<tr class="photoRow"><td><a target="_blank" href="' + fullUrl + 'photo' + i + placeID + '.png"><img class="photoOfLocation" src="' + fullUrl + 'photo' + i + placeID + '.png"/></a></td></tr>';
                             }
                             photosHTML += "</table>";
                             photosBody.innerHTML = photosHTML;
@@ -476,30 +573,51 @@ if (isset($_POST['funcName'])) {
                 xhttp3.send(params);
             }
             else if (target.className == 'placeAddressLine') {
+
                 var map;
 
-                locationCoordinates = {lat: parseFloat(target.parentNode.dataset.lat), lng: parseFloat(target.parentNode.dataset.lng)};
+                var anyMapOpen = document.getElementsByClassName('map');
 
                 var mapID = 'map' + target.parentNode.dataset.placeid;
-                map = new google.maps.Map(document.getElementById(mapID), {
-                    center: locationCoordinates,
-                    zoom: 18
-                });
-                var marker = new google.maps.Marker({
-                    position: locationCoordinates,
-                    map: map
-                });
-
-                var modesOfTravelID = 'modesOfTravel' + target.parentNode.dataset.placeid;
-                var thisModesOfTravel = document.getElementById(modesOfTravelID);
-                thisModesOfTravel.style.display = 'block';
 
                 var thisMap = document.getElementById(mapID);
-                thisMap.style.display = 'block';
+                if (thisMap.style.display == 'block') {
+                    thisMap.style.display = 'none';
 
-                var toolTipID = 'toolTip' + target.parentNode.dataset.placeid;
-                var toolTip = document.getElementById(toolTipID);
-                toolTip.style.display = 'block';
+                    var modesOfTravelID = 'modesOfTravel' + target.parentNode.dataset.placeid;
+                    var thisModesOfTravel = document.getElementById(modesOfTravelID);
+                    thisModesOfTravel.style.display = 'none';
+
+                    var toolTipID = 'toolTip' + target.parentNode.dataset.placeid;
+                    var toolTip = document.getElementById(toolTipID);
+                    toolTip.style.display = 'none';
+
+                }
+
+                else {
+                    locationCoordinates = {lat: parseFloat(target.parentNode.dataset.lat), lng: parseFloat(target.parentNode.dataset.lng)};
+
+                    map = new google.maps.Map(document.getElementById(mapID), {
+                        center: locationCoordinates,
+                        zoom: 13
+                    });
+                    var marker = new google.maps.Marker({
+                        position: locationCoordinates,
+                        map: map
+                    });
+
+                    var modesOfTravelID = 'modesOfTravel' + target.parentNode.dataset.placeid;
+                    var thisModesOfTravel = document.getElementById(modesOfTravelID);
+                    thisModesOfTravel.style.display = 'block';
+
+                    var thisMap = document.getElementById(mapID);
+                    thisMap.style.display = 'block';
+
+                    var toolTipID = 'toolTip' + target.parentNode.dataset.placeid;
+                    var toolTip = document.getElementById(toolTipID);
+                    toolTip.style.display = 'block';
+                }
+
             } 
             else if (target.parentNode.className == 'modesOfTravel'){
                 var lat = target.parentNode.parentNode.parentNode.dataset.lat;
@@ -514,14 +632,14 @@ if (isset($_POST['funcName'])) {
                 var originCoords = new google.maps.LatLng(myLat,myLon);
                 var destCoords = new google.maps.LatLng(lat,lng);
                 var mapOptions = {
-                    zoom: 14,
+                    zoom: 15,
                     center: destCoords
                 }
 
                 var mapID = 'map' + target.parentNode.parentNode.parentNode.dataset.placeid;
                 map = new google.maps.Map(document.getElementById(mapID), {
                     center: locationCoordinates,
-                    zoom: 18
+                    zoom: 15
                 });
 
                 var map = new google.maps.Map(document.getElementById(mapID), mapOptions);
